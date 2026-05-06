@@ -1,8 +1,8 @@
 import unittest
 from dataclasses import dataclass
 
-from accountant_bot.db.enums import EntityType, TaxRegime
-from accountant_bot.services.profile_matching import ProfileContext, template_matches_profile
+from shared.db.enums import EntityType, TaxRegime
+from backend.services.profile_matching import ProfileContext, template_matches_profile
 
 
 @dataclass

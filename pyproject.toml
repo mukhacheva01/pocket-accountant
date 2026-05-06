@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pocket-accountant-bot"
 version = "0.1.0"
-description = "Telegram bot and backend assistant for Ozon marketplace sellers"
+description = "Pocket Accountant — Telegram AI accountant bot for Russian entrepreneurs"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
@@ -35,13 +35,10 @@ dev = [
   "ruff>=0.5,<1.0",
 ]
 
-[tool.setuptools]
-package-dir = {"" = "src"}
-
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["."]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+pythonpath = ["."]
 testpaths = ["tests"]
-norecursedirs = [".git", ".venv", ".venv-release", "remote_sync", "openclaw_bundle", "__pycache__"]
+norecursedirs = [".git", ".venv", "__pycache__"]

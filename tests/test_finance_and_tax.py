@@ -1,9 +1,9 @@
 import unittest
 from decimal import Decimal
 
-from accountant_bot.db.enums import EntityType
-from accountant_bot.services.finance_parser import FinanceTextParser
-from accountant_bot.services.tax_engine import TaxCalculationRequest, TaxCalculatorService, TaxQueryParser
+from shared.db.enums import EntityType
+from backend.services.finance_parser import FinanceTextParser
+from backend.services.tax_engine import TaxCalculationRequest, TaxCalculatorService, TaxQueryParser
 
 
 class FinanceAndTaxTests(unittest.TestCase):
