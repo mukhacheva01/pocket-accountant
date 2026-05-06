@@ -22,8 +22,13 @@ set-webhook:
 test:
 	pytest --tb=short -q
 
+test-cov:
+	pytest --cov --cov-fail-under=75 --cov-report=term-missing --tb=short -q
+
 lint:
 	ruff check .
+
+ci: lint test-cov
 
 up:
 	docker compose up -d
