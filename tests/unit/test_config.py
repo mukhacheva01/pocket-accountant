@@ -4,7 +4,11 @@ from shared.config import Settings
 
 
 def _make(overrides: dict) -> Settings:
-    base = {"DATABASE_URL": "sqlite+aiosqlite:///test.db", "REDIS_URL": "redis://localhost:6379/0"}
+    base = {
+        "DATABASE_URL": "sqlite+aiosqlite:///test.db",
+        "REDIS_URL": "redis://localhost:6379/0",
+        "EXPOSE_API_DOCS": False,
+    }
     base.update(overrides)
     return Settings(**base)
 
