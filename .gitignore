@@ -1,3 +1,4 @@
+# Python
 __pycache__/
 *.py[cod]
 *.egg-info/
@@ -7,17 +8,33 @@ build/
 *.egg
 .venv/
 venv/
+
+# Env / secrets
 .env
 .env.local
+.env.production
+
+# DB
 *.db
 *.sqlite3
+
+# IDE
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
+
+# Testing / quality
 .mypy_cache/
 .pytest_cache/
 .coverage
 htmlcov/
+.ruff_cache/
+
+# Logs
 *.log
+
+# OS
+.DS_Store
+Thumbs.db
