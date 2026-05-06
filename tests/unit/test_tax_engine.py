@@ -2,9 +2,8 @@
 
 from decimal import Decimal
 
-import pytest
 
-from shared.db.enums import EntityType, TaxRegime
+from shared.db.enums import EntityType
 from backend.services.tax_engine import (
     TaxCalculationRequest,
     TaxCalculatorService,

@@ -1,11 +1,10 @@
 """Extended tests for backend.services.subscription.SubscriptionService."""
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timezone
 from unittest.mock import AsyncMock, MagicMock
 
-from shared.db.enums import PaymentStatus, SubscriptionPlan
-from shared.db.models import Subscription, User
-from backend.services.subscription import SubscriptionService, PLAN_DETAILS
+from shared.db.enums import SubscriptionPlan
+from backend.services.subscription import SubscriptionService
 
 
 def _make_service():

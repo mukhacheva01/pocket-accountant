@@ -1,6 +1,5 @@
 """Integration tests for the /api/tax endpoints."""
 
-from tests.integration.conftest import make_test_settings
 
 
 class TestTaxParseQueryEndpoint:

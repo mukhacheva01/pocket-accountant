@@ -1,5 +1,4 @@
 from datetime import date, timedelta
-from typing import List
 
 from backend.repositories.events import CalendarEventRepository
 from backend.services.profile_matching import ProfileContext, template_matches_profile

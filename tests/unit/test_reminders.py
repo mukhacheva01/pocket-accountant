@@ -1,8 +1,8 @@
 """Tests for backend.services.reminders."""
 
-from datetime import date, datetime, timezone
+from datetime import date, timezone
 
-from shared.db.enums import EventCategory, ReminderType
+from shared.db.enums import ReminderType
 from backend.services.reminders import ReminderPlanner, REMINDER_TYPE_TO_OFFSET
 
 

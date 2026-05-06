@@ -4,7 +4,7 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 
 import pytest
-from sqlalchemy import JSON, event
+from sqlalchemy import JSON
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from shared.db.base import Base
@@ -32,13 +32,8 @@ from shared.db.models import (
     CalendarEvent,
     FinanceRecord,
     LawUpdate,
-    LawUpdateDelivery,
-    MarketplaceConnection,
     Payment,
     Reminder,
-    Subscription,
-    User,
-    UserEvent,
 )
 from backend.repositories.events import CalendarEventRepository
 from backend.repositories.finance import FinanceRepository

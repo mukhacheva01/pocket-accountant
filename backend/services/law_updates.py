@@ -1,4 +1,4 @@
-from typing import Iterable, List
+from typing import List
 
 from shared.db.enums import LawUpdateReviewStatus
 from backend.repositories.law_updates import LawUpdateRepository

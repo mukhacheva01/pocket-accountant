@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import JSON
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from backend.app import create_app
 from shared.config import Settings, get_settings
@@ -209,7 +208,7 @@ class TestAdminUserCard:
             mock_sf.return_value.__aenter__ = AsyncMock(return_value=session)
             mock_sf.return_value.__aexit__ = AsyncMock()
 
-            from shared.db.enums import EntityType, TaxRegime, SubscriptionPlan, PaymentStatus
+            from shared.db.enums import EntityType, TaxRegime, SubscriptionPlan
             user = MagicMock()
             user.telegram_id = 123
             user.username = "alice"

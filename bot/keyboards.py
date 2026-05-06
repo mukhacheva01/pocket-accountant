@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 
-from bot.callbacks import EventActionCallback, NavigationCallback, PageCallback, SubscriptionCallback
+from bot.callbacks import EventActionCallback, NavigationCallback, SubscriptionCallback
 
 
 def onboarding_entity_type_keyboard() -> ReplyKeyboardMarkup:

@@ -1,12 +1,10 @@
 """Tests for worker.tasks — background job functions."""
 
 from datetime import date, datetime, timezone
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 
-from shared.db.enums import EntityType, EventCategory, EventStatus, ReminderStatus, ReminderType, TaxRegime
+from shared.db.enums import EntityType, EventCategory, ReminderStatus, ReminderType, TaxRegime
 
 
 class TestSyncUserEvents:

@@ -2,7 +2,7 @@ import logging
 from datetime import date
 
 from aiogram import Bot
-from aiogram.exceptions import TelegramForbiddenError, TelegramBadRequest
+from aiogram.exceptions import TelegramForbiddenError
 from sqlalchemy import select
 
 from shared.clock import utcnow

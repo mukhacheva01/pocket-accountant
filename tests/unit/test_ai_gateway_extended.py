@@ -1,6 +1,6 @@
 """Extended tests for backend.services.ai_gateway."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from backend.services.ai_gateway import AIGateway, AIResponse, NoopAIProvider, OpenAIResponsesProvider
 

@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 
 from bot.middleware import ErrorHandlerMiddleware, UserInjectMiddleware
 

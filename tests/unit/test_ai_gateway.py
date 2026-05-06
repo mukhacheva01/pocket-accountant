@@ -1,6 +1,5 @@
 """Tests for backend.services.ai_gateway."""
 
-import pytest
 
 from backend.services.ai_gateway import (
     AIGateway,

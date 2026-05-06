@@ -55,3 +55,11 @@ omit = ["*/migrations/*", "*/alembic/*"]
 fail_under = 75
 show_missing = true
 skip_covered = false
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E402", "E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"bot/handlers/__init__.py" = ["F401"]
+"tests/**" = ["F841"]
