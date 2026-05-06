@@ -1,7 +1,6 @@
 """Tests for regime selection FSM handlers in bot.handlers."""
 
 from decimal import Decimal
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from bot.handlers import build_router

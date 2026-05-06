@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from bot.handlers import build_router
-from tests.unit.bot_helpers import make_message, make_state, make_services, make_db_user, make_profile
+from tests.unit.bot_helpers import make_message, make_state, make_services, make_db_user
 
 
 MODULE = "bot.handlers"
@@ -67,7 +67,6 @@ class TestStartHandler:
         user = make_db_user(telegram_id=123)
         svc.onboarding.ensure_user = AsyncMock(return_value=user)
 
-        from unittest.mock import PropertyMock
         referrer = make_db_user(telegram_id=456)
         scalar_result = MagicMock()
         scalar_result.scalar_one_or_none = MagicMock(return_value=referrer)

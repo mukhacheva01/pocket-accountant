@@ -1,11 +1,10 @@
 """Tests for AI consult and catch-all handlers in bot.handlers."""
 
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from shared.db.enums import FinanceRecordType
 from bot.handlers import build_router
-from tests.unit.bot_helpers import make_message, make_state, make_services, make_db_user
+from tests.unit.bot_helpers import make_message, make_state, make_services
 
 
 MODULE = "bot.handlers"

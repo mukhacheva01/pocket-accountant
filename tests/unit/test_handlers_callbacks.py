@@ -1,14 +1,11 @@
 """Tests for callback query handlers in bot.handlers."""
 
-from datetime import date, timedelta
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from bot.callbacks import EventActionCallback, NavigationCallback, PageCallback, SubscriptionCallback
 from bot.handlers import build_router
 from tests.unit.bot_helpers import (
     make_callback_query,
-    make_message,
     make_services,
     make_state,
 )

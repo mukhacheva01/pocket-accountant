@@ -8,9 +8,6 @@ from aiogram.types import CallbackQuery, Message, User as TelegramUser
 
 from shared.db.enums import (
     EntityType,
-    EventCategory,
-    FinanceRecordType,
-    SubscriptionPlan,
     TaxRegime,
 )
 
