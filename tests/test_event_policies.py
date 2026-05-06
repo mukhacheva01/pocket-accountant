@@ -1,7 +1,7 @@
 import unittest
 
-from accountant_bot.db.enums import EventCategory
-from accountant_bot.services.event_policies import (
+from shared.db.enums import EventCategory
+from backend.services.event_policies import (
     build_action_hint,
     build_consequence_hint,
     event_matches_reminder_preferences,

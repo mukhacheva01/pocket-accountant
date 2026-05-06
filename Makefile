@@ -2,19 +2,31 @@ install:
 	python3 -m pip install -e .[dev]
 
 run-api:
-	uvicorn accountant_bot.app.api:create_app --factory --reload
+	uvicorn backend.app:create_app --factory --reload
+
+run-bot:
+	python3 -m bot.entrypoint
 
 run-worker:
-	python3 -m accountant_bot.jobs.worker
+	python3 -m worker.entrypoint
 
 migrate:
 	alembic upgrade head
 
 seed:
-	PYTHONPATH=src python3 -m accountant_bot.db.bootstrap
+	python3 -m scripts.seed_db
 
 set-webhook:
 	python3 scripts/set_webhook.py
 
 test:
-	python3 -m unittest discover -s tests
+	pytest --tb=short -q
+
+lint:
+	ruff check .
+
+up:
+	docker compose up -d
+
+down:
+	docker compose down

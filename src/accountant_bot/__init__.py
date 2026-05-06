@@ -1,2 +1,0 @@
-"""Pocket Accountant Bot package."""
-

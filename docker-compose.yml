@@ -1,0 +1,73 @@
+x-app: &app-base
+  build:
+    context: .
+    dockerfile: docker/Dockerfile
+  env_file: .env
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_started
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-pocket_accountant}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+
+  backend:
+    <<: *app-base
+    environment:
+      SERVICE: backend
+    ports:
+      - "${API_PORT:-8080}:8080"
+
+  bot:
+    <<: *app-base
+    environment:
+      SERVICE: bot
+    depends_on:
+      backend:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  worker:
+    <<: *app-base
+    environment:
+      SERVICE: worker
+
+  nginx:
+    image: nginx:1.27-alpine
+    profiles: ["webhook"]
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/accountant-bot.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  pg_data:
+  redis_data:
