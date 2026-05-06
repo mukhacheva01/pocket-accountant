@@ -5,6 +5,7 @@ from aiogram.types import Update
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 
 from bot.runtime import build_bot_runtime
+from backend.routers import build_api_router
 from backend.routers.admin import build_admin_router
 from shared.config import Settings, get_settings
 from shared.logging import configure_logging
@@ -83,5 +84,6 @@ def create_app(settings: Settings = None) -> FastAPI:
         await bot.session.close()
         logger.info("api_stopped")
 
+    app.include_router(build_api_router())
     app.include_router(build_admin_router())
     return app
