@@ -15,9 +15,6 @@ COPY prompts ./prompts
 COPY data ./data
 COPY scripts ./scripts
 
-RUN pip install --upgrade pip && pip install .
+RUN pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir .
 
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-ENTRYPOINT ["/entrypoint.sh"]
+CMD ["python", "-m", "backend.entrypoint"]
