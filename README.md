@@ -67,29 +67,16 @@ python3 -m accountant_bot.jobs.worker
 
 ## Production deploy
 
-For a server without a domain and TLS, use Telegram polling mode instead of webhooks.
-
-1. Set `TELEGRAM_DELIVERY_MODE=polling` in `.env`.
-2. Add swap on low-memory VPS hosts before rebuilding images.
-3. Build and start infrastructure, API, and worker without the polling bot:
-
 ```bash
-./deploy/deploy.sh
+docker compose up -d
 ```
 
-4. After the old polling instance is stopped, start the new bot on this host:
+Set `TELEGRAM_DELIVERY_MODE=polling` in `.env` for servers without a domain and TLS.
 
-```bash
-START_BOT=1 ./deploy/deploy.sh
-```
+## Refactoring
 
-5. Check the containers:
-
-```bash
-docker compose -f deploy/docker-compose.prod.yml ps
-```
-
-Do not run `python -m accountant_bot.db.bootstrap` in production while the calendar data is still demo-only.
+The project is undergoing a monolith → microservices decomposition.
+See [docs/REFACTORING_PLAN.md](docs/REFACTORING_PLAN.md) for the full plan.
 
 ## Notes
 
