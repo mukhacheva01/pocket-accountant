@@ -1,0 +1,67 @@
+name: CD — deploy to production
+
+on:
+  push:
+    branches: [main]
+
+env:
+  DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+  DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+  DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Tests with coverage
+        run: pytest --cov --cov-fail-under=75 --tb=short -q
+        env:
+          DATABASE_URL: "sqlite+aiosqlite:///test.db"
+          REDIS_URL: "redis://localhost:6379/0"
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Sync files to server
+        run: |
+          rsync -avz --delete \
+            --exclude='.git' \
+            --exclude='.env' \
+            --exclude='__pycache__' \
+            --exclude='.venv' \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./ "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/"
+
+      - name: Rebuild and restart
+        run: |
+          ssh -i ~/.ssh/deploy_key "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "cd ${DEPLOY_PATH} && docker compose up -d --build"
+
+      - name: Smoke test
+        run: |
+          ssh -i ~/.ssh/deploy_key "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "curl -sf http://localhost:8080/health || exit 1"
