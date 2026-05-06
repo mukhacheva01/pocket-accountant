@@ -1,7 +1,14 @@
+"""Worker entrypoint: APScheduler + Bot singleton (output-only).
+
+Bot is used ONLY for outgoing messages (send_message, send_photo).
+Forbidden: set_webhook, delete_webhook, get_updates, Dispatcher, start_polling.
+"""
+
 import asyncio
 import logging
 
 from aiogram import Bot
+from aiogram.client.default import DefaultBotProperties
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from shared.config import get_settings
@@ -15,7 +22,11 @@ logger = logging.getLogger(__name__)
 async def run_worker() -> None:
     settings = get_settings()
     configure_logging(settings.log_level)
-    bot = Bot(token=settings.telegram_bot_token)
+
+    bot = Bot(
+        token=settings.telegram_bot_token,
+        default=DefaultBotProperties(parse_mode="Markdown"),
+    )
     scheduler = AsyncIOScheduler(timezone=settings.timezone)
 
     scheduler.add_job(sync_user_events, "cron", hour=settings.user_event_sync_hour, minute=0)
@@ -40,6 +51,7 @@ async def run_worker() -> None:
     finally:
         scheduler.shutdown(wait=False)
         await bot.session.close()
+        logger.info("worker_stopped")
 
 
 def main() -> None:
