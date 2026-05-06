@@ -1,0 +1,1892 @@
+{
+  "dataset": "marketplace_analytics_company_cards",
+  "generated_at": "2026-03-06",
+  "category_slug": "analitika",
+  "focus_marketplaces": [
+    "Wildberries",
+    "Ozon",
+    "Яндекс Маркет"
+  ],
+  "notes": [
+    "Включены только реальные сервисы.",
+    "Если поле не удалось подтвердить по открытым источникам, указано \"нет данных\".",
+    "Amazon и KazanExpress исключены из целевого набора.",
+    "Поле marketplaces_supported_raw сохраняет исходную формулировку из мастер-карточки."
+  ],
+  "items": [
+    {
+      "service_id": "analitika-001",
+      "category_slug": "analitika",
+      "position_in_category": 1,
+      "total_in_category": 20,
+      "prev_id": "нет данных",
+      "next_id": "analitika-002",
+      "name": "MPSTATS",
+      "company_details": "ООО «МПСТАТС», ОГРН 1217800027961, ИНН 7804680366",
+      "service_type": "SaaS-платформа",
+      "category": "аналитика",
+      "short_description": "Один из самых известных сервисов аналитики маркетплейсов с внешней и внутренней аналитикой, SEO и AI-модулями. Подходит для поиска ниш, анализа конкурентов и контроля собственных SKU.",
+      "tasks_solved": [
+        "поиск ниш и трендов",
+        "анализ конкурентов, брендов и категорий",
+        "SEO и контроль продаж по собственному кабинету"
+      ],
+      "marketplaces_supported_raw": "Wildberries, Ozon, Яндекс Маркет",
+      "target_audience": "новичкам, действующим селлерам, агентствам, аналитикам",
+      "main_features": [
+        "внешняя аналитика товаров, брендов, продавцов и запросов",
+        "внутренняя аналитика кабинета по API",
+        "SEO-инструменты, AI-описания, мониторинг позиций"
+      ],
+      "pricing_model": "подписка",
+      "approximate_cost": "от 3 840 ₽/мес",
+      "trial_or_demo": "есть демо / промо-доступы, условия зависят от тарифа",
+      "website": "https://mpstats.io/",
+      "telegram_channel": "https://t.me/analyticsmpstats",
+      "telegram_support": "https://t.me/mpstats_help_bot",
+      "vk": "https://vk.com/mpstatsio",
+      "email_raw": "info@mpstats.io, help@mpstats.io",
+      "phone_raw": "+7 (495) 320-77-77",
+      "address_or_region": "г. Санкт-Петербург",
+      "offer_or_legal_page": "https://mpstats.io/contacts",
+      "pros": [
+        "глубокая база данных",
+        "сильные SEO и AI-модули",
+        "есть публичные контакты и реквизиты"
+      ],
+      "cons": [
+        "выше среднего по цене",
+        "требует времени на освоение"
+      ],
+      "analogs_raw": "Moneyplace, Sellmonitor, MarketGuru",
+      "usefulness_rating": 10,
+      "sources": [
+        "https://mpstats.io/",
+        "https://mpstats.io/contacts",
+        "https://t.me/analyticsmpstats",
+        "https://vk.com/mpstatsio"
+      ],
+      "marketplaces_supported": [
+        "Wildberries",
+        "Ozon",
+        "Яндекс Маркет"
+      ],
+      "emails": [
+        "info@mpstats.io",
+        "help@mpstats.io"
+      ],
+      "phones": [
+        "+7 (495) 320-77-77"
+      ],
+      "analogs": [
+        "Moneyplace",
+        "Sellmonitor",
+        "MarketGuru"
+      ],
+      "contacts": {
+        "website": "https://mpstats.io/",
+        "telegram_channel": "https://t.me/analyticsmpstats",
+        "telegram_support": "https://t.me/mpstats_help_bot",
+        "vk": "https://vk.com/mpstatsio",
+        "emails": [
+          "info@mpstats.io",
+          "help@mpstats.io"
+        ],
+        "phones": [
+          "+7 (495) 320-77-77"
+        ],
+        "address_or_region": "г. Санкт-Петербург",
+        "offer_or_legal_page": "https://mpstats.io/contacts"
+      },
+      "legal_entity_name": "ООО «МПСТАТС»",
+      "inn": "7804680366",
+      "ogrn": "1217800027961",
+      "kpp": "нет данных",
+      "youtube_links": [
+        "https://www.youtube.com/c/mpstats"
+      ],
+      "extra_telegram_links": [],
+      "additional_public_docs": [],
+      "remaining_gaps": [],
+      "source_count": 4
+    },
+    {
+      "service_id": "analitika-002",
+      "category_slug": "analitika",
+      "position_in_category": 2,
+      "total_in_category": 20,
+      "prev_id": "analitika-001",
+      "next_id": "analitika-003",
+      "name": "Moneyplace",
+      "company_details": "ООО «Маниплейс»",
+      "service_type": "SaaS-платформа",
+      "category": "аналитика",
+      "short_description": "Мультиплатформенный сервис аналитики и управления для продавцов на маркетплейсах. Сильнее всего полезен селлерам, которые ведут несколько площадок и хотят работать из одного кабинета.",
+      "tasks_solved": [
+        "подбор ниш и проверка спроса",
+        "анализ конкурентов на нескольких площадках",
+        "командная работа и управление товарами"
+      ],
+      "marketplaces_supported_raw": "Wildberries, Ozon, Яндекс Маркет, AliExpress, Мегамаркет",
+      "target_audience": "мультиканальным селлерам, агентствам, менеджерам маркетплейсов",
+      "main_features": [
+        "внешняя и внутренняя аналитика",
+        "SEO и работа с семантикой",
+        "роли, права доступа и инструменты управления командой"
+      ],
+      "pricing_model": "подписка",
+      "approximate_cost": "от 9 900 ₽/мес",
+      "trial_or_demo": "нет данных",
+      "website": "https://moneyplace.io/",
+      "telegram_channel": "https://t.me/moneyplace_official",
+      "telegram_support": "нет данных",
+      "vk": "https://vk.com/moneyplace_io",
+      "email_raw": "support@moneyplace.io",
+      "phone_raw": "+7 (495) 189-71-61",
+      "address_or_region": "нет данных",
+      "offer_or_legal_page": "https://moneyplace.io/contacts",
+      "pros": [
+        "широкий охват маркетплейсов",
+        "подходит для командной работы",
+        "много инструментов в одной экосистеме"
+      ],
+      "cons": [
+        "дорогой вход для новичка",
+        "соцсети и реквизиты слабо вынесены в открытый доступ"
+      ],
+      "analogs_raw": "MPSTATS, Sellmonitor, SellerFox",
+      "usefulness_rating": 9,
+      "sources": [
+        "https://moneyplace.io/",
+        "https://moneyplace.io/contacts",
+        "https://t.me/moneyplace_official",
+        "https://vk.com/moneyplace_io"
+      ],
+      "marketplaces_supported": [
+        "Wildberries",
+        "Ozon",
+        "Яндекс Маркет",
+        "AliExpress",
+        "Мегамаркет"
+      ],
+      "emails": [
+        "support@moneyplace.io"
+      ],
+      "phones": [
+        "+7 (495) 189-71-61"
+      ],
+      "analogs": [
+        "MPSTATS",
+        "Sellmonitor",
+        "SellerFox"
+      ],
+      "contacts": {
+        "website": "https://moneyplace.io/",
+        "telegram_channel": "https://t.me/moneyplace_official",
+        "telegram_support": "нет данных",
+        "vk": "https://vk.com/moneyplace_io",
+        "emails": [
+          "support@moneyplace.io"
+        ],
+        "phones": [
+          "+7 (495) 189-71-61"
+        ],
+        "address_or_region": "нет данных",
+        "offer_or_legal_page": "https://moneyplace.io/contacts"
+      },
+      "legal_entity_name": "ООО «Маниплейс»",
+      "inn": "нет данных",
+      "ogrn": "нет данных",
+      "kpp": "нет данных",
+      "youtube_links": [],
+      "extra_telegram_links": [],
+      "additional_public_docs": [],
+      "remaining_gaps": [],
+      "source_count": 4
+    },
+    {
+      "service_id": "analitika-003",
+      "category_slug": "analitika",
+      "position_in_category": 3,
+      "total_in_category": 20,
+      "prev_id": "analitika-002",
+      "next_id": "analitika-004",
+      "name": "MarketGuru",
+      "company_details": "ООО «МаркетГуру», ОГРН 1216100023897, ИНН 6154160950",
+      "service_type": "SaaS-платформа",
+      "category": "аналитика",
+      "short_description": "Сервис аналитики с сильным фокусом на Wildberries. Используется для конкурентного анализа, финансовой аналитики и роста карточек на WB.",
+      "tasks_solved": [
+        "поиск ниш на Wildberries",
+        "анализ карточек, продаж и маржи",
+        "мониторинг конкурентов и контента"
+      ],
+      "marketplaces_supported_raw": "Wildberries",
+      "target_audience": "WB-селлерам, менеджерам маркетплейсов, небольшим командам",
+      "main_features": [
+        "аналитика товаров, продавцов и категорий",
+        "финансовая аналитика и unit-экономика",
+        "мониторинг карточек и конкурентной среды"
+      ],
+      "pricing_model": "подписка",
+      "approximate_cost": "от 7 700 ₽/мес",
+      "trial_or_demo": "есть демо / консультация",
+      "website": "https://marketguru.io/",
+      "telegram_channel": "https://t.me/marketguruclub",
+      "telegram_support": "https://t.me/MarketGuru_Support_bot",
+      "vk": "https://vk.com/mguru_io",
+      "email_raw": "support@marketguru.io",
+      "phone_raw": "+7 (988) 256-10-00",
+      "address_or_region": "347904, Ростовская область, г. Таганрог, пл. Восстания, д. 3 к. 2, этаж/литер 2/а, помещ. 3",
+      "offer_or_legal_page": "https://marketguru.io/privacy",
+      "pros": [
+        "понятный фокус на WB",
+        "есть публичный Telegram и поддержка",
+        "удобен для ежедневной работы менеджера"
+      ],
+      "cons": [
+        "фактически заточен под одну площадку",
+        "реквизиты не вынесены в открытый контактный блок"
+      ],
+      "analogs_raw": "MPSTATS, Маяк, Wildbox",
+      "usefulness_rating": 8,
+      "sources": [
+        "https://marketguru.io/",
+        "https://t.me/marketguruclub",
+        "https://vk.com/mguru_io",
+        "https://marketguru.io/privacy"
+      ],
+      "marketplaces_supported": [
+        "Wildberries"
+      ],
+      "emails": [
+        "support@marketguru.io"
+      ],
+      "phones": [
+        "+7 (988) 256-10-00"
+      ],
+      "analogs": [
+        "MPSTATS",
+        "Маяк",
+        "Wildbox"
+      ],
+      "contacts": {
+        "website": "https://marketguru.io/",
+        "telegram_channel": "https://t.me/marketguruclub",
+        "telegram_support": "https://t.me/MarketGuru_Support_bot",
+        "vk": "https://vk.com/mguru_io",
+        "emails": [
+          "support@marketguru.io"
+        ],
+        "phones": [
+          "+7 (988) 256-10-00"
+        ],
+        "address_or_region": "347904, Ростовская область, г. Таганрог, пл. Восстания, д. 3 к. 2, этаж/литер 2/а, помещ. 3",
+        "offer_or_legal_page": "https://marketguru.io/privacy"
+      },
+      "legal_entity_name": "ООО «МаркетГуру»",
+      "inn": "6154160950",
+      "ogrn": "1216100023897",
+      "kpp": "нет данных",
+      "youtube_links": [
+        "https://youtube.com/channel/UCJ5GIk9u1PE6IPDTwXmCimw"
+      ],
+      "extra_telegram_links": [],
+      "additional_public_docs": [
+        "https://marketguru.io/policy"
+      ],
+      "remaining_gaps": [],
+      "source_count": 4
+    },
+    {
+      "service_id": "analitika-004",
+      "category_slug": "analitika",
+      "position_in_category": 4,
+      "total_in_category": 20,
+      "prev_id": "analitika-003",
+      "next_id": "analitika-005",
+      "name": "Sellmonitor",
+      "company_details": "нет данных",
+      "service_type": "SaaS-платформа",
+      "category": "аналитика",
+      "short_description": "Платформа аналитики и управления продажами с упором на товары, категории, поставки, рекламу и цены. Подходит тем, кому нужна не только аналитика, но и рабочие действия на основе данных.",
+      "tasks_solved": [
+        "поиск ниш и оценка спроса",
+        "мониторинг конкурентов и запросов",
+        "планирование поставок и управление ценами"
+      ],
+      "marketplaces_supported_raw": "Wildberries, Ozon, Яндекс Маркет",
+      "target_audience": "действующим селлерам, брендам, агентствам",
+      "main_features": [
+        "внешняя аналитика товаров, категорий и магазинов",
+        "SEO, реклама, биддинг, управление ценами",
+        "планирование поставок и аналитика ассортимента"
+      ],
+      "pricing_model": "подписка",
+      "approximate_cost": "нет данных",
+      "trial_or_demo": "есть заявка на демо",
+      "website": "https://sellmonitor.com/",
+      "telegram_channel": "https://t.me/sellmonitor_com",
+      "telegram_support": "https://t.me/SellmonitorHELP_bot",
+      "vk": "нет данных",
+      "email_raw": "info@sellmonitor.com",
+      "phone_raw": "+7 (495) 414-10-11",
+      "address_or_region": "нет данных",
+      "offer_or_legal_page": "https://sellmonitor.com/privacy_policy.pdf",
+      "pros": [
+        "сильная связка аналитики с операционными модулями",
+        "живой Telegram-канал и бот поддержки",
+        "подходит для зрелых селлеров"
+      ],
+      "cons": [
+        "публичный прайс неочевиден",
+        "интерфейс может быть сложным для новичка"
+      ],
+      "analogs_raw": "MPSTATS, Moneyplace, SellerFox",
+      "usefulness_rating": 9,
+      "sources": [
+        "https://sellmonitor.com/",
+        "https://t.me/sellmonitor_com",
+        "https://t.me/SellmonitorHELP_bot",
+        "https://sellmonitor.com/privacy_policy.pdf"
+      ],
+      "marketplaces_supported": [
+        "Wildberries",
+        "Ozon",
+        "Яндекс Маркет"
+      ],
+      "emails": [
+        "info@sellmonitor.com"
+      ],
+      "phones": [
+        "+7 (495) 414-10-11"
+      ],
+      "analogs": [
+        "MPSTATS",
+        "Moneyplace",
+        "SellerFox"
+      ],
+      "contacts": {
+        "website": "https://sellmonitor.com/",
+        "telegram_channel": "https://t.me/sellmonitor_com",
+        "telegram_support": "https://t.me/SellmonitorHELP_bot",
+        "vk": "нет данных",
+        "emails": [
+          "info@sellmonitor.com"
+        ],
+        "phones": [
+          "+7 (495) 414-10-11"
+        ],
+        "address_or_region": "нет данных",
+        "offer_or_legal_page": "https://sellmonitor.com/privacy_policy.pdf"
+      },
+      "legal_entity_name": "нет данных",
+      "inn": "нет данных",
+      "ogrn": "нет данных",
+      "kpp": "нет данных",
+      "youtube_links": [],
+      "extra_telegram_links": [],
+      "additional_public_docs": [],
+      "remaining_gaps": [
+        "vk",
+        "company_details"
+      ],
+      "source_count": 4
+    },
+    {
+      "service_id": "analitika-005",
+      "category_slug": "analitika",
+      "position_in_category": 5,
+      "total_in_category": 20,
+      "prev_id": "analitika-004",
+      "next_id": "analitika-006",
+      "name": "Stat4Market",
+      "company_details": "нет данных",
+      "service_type": "SaaS-платформа",
+      "category": "аналитика",
+      "short_description": "Сервис для анализа продаж, позиций, поставок и прибыльности на маркетплейсах. Полезен там, где нужен баланс между аналитикой, SEO и финансовым контролем.",
+      "tasks_solved": [
+        "анализ заказов и позиций",
+        "контроль прибыльности и расходов",
+        "планирование поставок и управление карточками"
+      ],
+      "marketplaces_supported_raw": "Wildberries, Ozon",
+      "target_audience": "действующим селлерам, менеджерам, небольшим командам",
+      "main_features": [
+        "внутренняя аналитика и unit-экономика",
+        "мониторинг позиций и конкурентов",
+        "SEO-редактор и рекламные инструменты"
+      ],
+      "pricing_model": "подписка",
+      "approximate_cost": "от 2 900 ₽/мес",
+      "trial_or_demo": "нет данных",
+      "website": "https://stat4market.com/",
+      "telegram_channel": "https://t.me/stat4market",
+      "telegram_support": "https://t.me/Help_S4M_Bot",
+      "vk": "нет данных",
+      "email_raw": "info@stat4market.com",
+      "phone_raw": "8 800 333-10-49",
+      "address_or_region": "нет данных",
+      "offer_or_legal_page": "https://stat4market.com/contacts",
+      "pros": [
+        "заметный фокус на прибыльности",
+        "относительно низкий вход по цене",
+        "подходит для регулярной операционной аналитики"
+      ],
+      "cons": [
+        "мало публичных контактов и соцсетей",
+        "сильнее всего раскрывается на WB"
+      ],
+      "analogs_raw": "Маяк, SellerStats, MPsimple",
+      "usefulness_rating": 8,
+      "sources": [
+        "https://stat4market.com/",
+        "https://stat4market.com/contacts",
+        "https://t.me/stat4market",
+        "https://t.me/Help_S4M_Bot"
+      ],
+      "marketplaces_supported": [
+        "Wildberries",
+        "Ozon"
+      ],
+      "emails": [
+        "info@stat4market.com"
+      ],
+      "phones": [
+        "8 800 333-10-49"
+      ],
+      "analogs": [
+        "Маяк",
+        "SellerStats",
+        "MPsimple"
+      ],
+      "contacts": {
+        "website": "https://stat4market.com/",
+        "telegram_channel": "https://t.me/stat4market",
+        "telegram_support": "https://t.me/Help_S4M_Bot",
+        "vk": "нет данных",
+        "emails": [
+          "info@stat4market.com"
+        ],
+        "phones": [
+          "8 800 333-10-49"
+        ],
+        "address_or_region": "нет данных",
+        "offer_or_legal_page": "https://stat4market.com/contacts"
+      },
+      "legal_entity_name": "нет данных",
+      "inn": "нет данных",
+      "ogrn": "нет данных",
+      "kpp": "нет данных",
+      "youtube_links": [],
+      "extra_telegram_links": [],
+      "additional_public_docs": [],
+      "remaining_gaps": [
+        "vk",
+        "company_details"
+      ],
+      "source_count": 4
+    },
+    {
+      "service_id": "analitika-006",
+      "category_slug": "analitika",
+      "position_in_category": 6,
+      "total_in_category": 20,
+      "prev_id": "analitika-005",
+      "next_id": "analitika-007",
+      "name": "Маяк",
+      "company_details": "ООО «М ДАТА ТЕК»",
+      "service_type": "SaaS-платформа / экосистема",
+      "category": "аналитика",
+      "short_description": "Большая экосистема для аналитики, поставок, SEO, рекламы и автоматизации на маркетплейсах. Подходит тем, кто хочет решать несколько задач в одном сервисе.",
+      "tasks_solved": [
+        "поиск трендов и контроль конкурентов",
+        "расчёт поставок и остатков",
+        "контроль рекламы, цен и unit-экономики"
+      ],
+      "marketplaces_supported_raw": "Wildberries, Ozon",
+      "target_audience": "новичкам, действующим селлерам, командам",
+      "main_features": [
+        "внешняя и внутренняя аналитика",
+        "поставки, остатки, география заказов",
+        "репрайсер, биддер, SEO и AI-модули"
+      ],
+      "pricing_model": "подписка",
+      "approximate_cost": "от 6 249 ₽/мес",
+      "trial_or_demo": "есть демо / консультация",
+      "website": "https://mayak.bz/",
+      "telegram_channel": "https://t.me/mayak_marketnews",
+      "telegram_support": "https://t.me/MayakHelp_Bot",
+      "vk": "https://vk.com/mayak_bz",
+      "email_raw": "hello@mayak.bz, marketing@mayak.bz",
+      "phone_raw": "+7 (969) 124-72-33, 8 (925) 302-29-49",
+      "address_or_region": "нет данных",
+      "offer_or_legal_page": "https://mayak.bz/legal",
+      "pros": [
+        "очень широкий функционал",
+        "публичные TG и VK-каналы",
+        "подходит как экосистема для роста"
+      ],
+      "cons": [
+        "избыточен для простого старта",
+        "итоговая стоимость может быть высокой"
+      ],
+      "analogs_raw": "MarketGuru, Stat4Market, MPSTATS",
+      "usefulness_rating": 9,
+      "sources": [
+        "https://mayak.bz/",
+        "https://t.me/mayak_marketnews",
+        "https://vk.com/mayak_bz",
+        "https://mayak.bz/legal"
+      ],
+      "marketplaces_supported": [
+        "Wildberries",
+        "Ozon"
+      ],
+      "emails": [
+        "hello@mayak.bz",
+        "marketing@mayak.bz"
+      ],
+      "phones": [
+        "+7 (969) 124-72-33",
+        "8 (925) 302-29-49"
+      ],
+      "analogs": [
+        "MarketGuru",
+        "Stat4Market",
+        "MPSTATS"
+      ],
+      "contacts": {
+        "website": "https://mayak.bz/",
+        "telegram_channel": "https://t.me/mayak_marketnews",
+        "telegram_support": "https://t.me/MayakHelp_Bot",
+        "vk": "https://vk.com/mayak_bz",
+        "emails": [
+          "hello@mayak.bz",
+          "marketing@mayak.bz"
+        ],
+        "phones": [
+          "+7 (969) 124-72-33",
+          "8 (925) 302-29-49"
+        ],
+        "address_or_region": "нет данных",
+        "offer_or_legal_page": "https://mayak.bz/legal"
+      },
+      "legal_entity_name": "ООО «М ДАТА ТЕК»",
+      "inn": "нет данных",
+      "ogrn": "нет данных",
+      "kpp": "нет данных",
+      "youtube_links": [
+        "https://www.youtube.com/channel/UCtBmoLyBXScmob5lMpCrgig"
+      ],
+      "extra_telegram_links": [
+        "https://t.me/mayak_novosti",
+        "https://t.me/+PwtB3DSD2xxhMjFi"
+      ],
+      "additional_public_docs": [],
+      "remaining_gaps": [],
+      "source_count": 4
+    },
+    {
+      "service_id": "analitika-007",
+      "category_slug": "analitika",
+      "position_in_category": 7,
+      "total_in_category": 20,
+      "prev_id": "analitika-006",
+      "next_id": "analitika-008",
+      "name": "SellerFox",
+      "company_details": "ООО «СЕЛЛЕРТЕХ», ОГРН 1231600031761, ИНН 1655496021",
+      "service_type": "сервис внешней аналитики",
+      "category": "аналитика",
+      "short_description": "Сервис внешней аналитики с упором на товары, категории, бренды и тренды сразу на нескольких площадках. Особенно полезен для мультиплощадочного анализа и конкурентной разведки.",
+      "tasks_solved": [
+        "сравнение площадок по товарам и категориям",
+        "анализ трендов и сезонности",
+        "мониторинг цен, продаж и остатков конкурентов"
+      ],
+      "marketplaces_supported_raw": "Wildberries, Ozon, Яндекс Маркет, AliExpress, Мегамаркет",
+      "target_audience": "мультиканальным селлерам, аналитикам, агентствам",
+      "main_features": [
+        "внешняя аналитика товаров, категорий и брендов",
+        "браузерное расширение",
+        "мониторинг топов, трендов и конкурентной среды"
+      ],
+      "pricing_model": "подписка",
+      "approximate_cost": "от 6 300 ₽/мес",
+      "trial_or_demo": "нет данных",
+      "website": "https://sellerden.ru/sellerfox",
+      "telegram_channel": "https://t.me/marketplace_top",
+      "telegram_support": "https://t.me/SellerFoxSupport",
+      "vk": "https://vk.com/sellerden",
+      "email_raw": "support@sellerfox.ru",
+      "phone_raw": "+7 (812) 409-60-86, +7 (931) 964-62-80",
+      "address_or_region": "Республика Татарстан, г. Казань, ул. Баумана, 44/8, помещ. 503-1с",
+      "offer_or_legal_page": "https://sellerden.ru/sellerfox",
+      "pros": [
+        "мультиплощадочный анализ",
+        "есть публичные реквизиты на сайте",
+        "понятен для конкурентной разведки"
+      ],
+      "cons": [
+        "бренд менее массовый, чем лидеры рынка",
+        "Telegram-канал не вынесен явно в публичную часть сайта"
+      ],
+      "analogs_raw": "Moneyplace, Sellmonitor, Shopstat",
+      "usefulness_rating": 8,
+      "sources": [
+        "https://sellerden.ru/sellerfox",
+        "https://t.me/SellerFoxSupport",
+        "https://vk.com/sellerden",
+        "https://t.me/marketplace_top"
+      ],
+      "marketplaces_supported": [
+        "Wildberries",
+        "Ozon",
+        "Яндекс Маркет",
+        "AliExpress",
+        "Мегамаркет"
+      ],
+      "emails": [
+        "support@sellerfox.ru"
+      ],
+      "phones": [
+        "+7 (812) 409-60-86",
+        "+7 (931) 964-62-80"
+      ],
+      "analogs": [
+        "Moneyplace",
+        "Sellmonitor",
+        "Shopstat"
+      ],
+      "contacts": {
+        "website": "https://sellerden.ru/sellerfox",
+        "telegram_channel": "https://t.me/marketplace_top",
+        "telegram_support": "https://t.me/SellerFoxSupport",
+        "vk": "https://vk.com/sellerden",
+        "emails": [
+          "support@sellerfox.ru"
+        ],
+        "phones": [
+          "+7 (812) 409-60-86",
+          "+7 (931) 964-62-80"
+        ],
+        "address_or_region": "Республика Татарстан, г. Казань, ул. Баумана, 44/8, помещ. 503-1с",
+        "offer_or_legal_page": "https://sellerden.ru/sellerfox"
+      },
+      "legal_entity_name": "ООО «СЕЛЛЕРТЕХ»",
+      "inn": "1655496021",
+      "ogrn": "1231600031761",
+      "kpp": "нет данных",
+      "youtube_links": [],
+      "extra_telegram_links": [],
+      "additional_public_docs": [],
+      "remaining_gaps": [],
+      "source_count": 4
+    },
+    {
+      "service_id": "analitika-008",
+      "category_slug": "analitika",
+      "position_in_category": 8,
+      "total_in_category": 20,
+      "prev_id": "analitika-007",
+      "next_id": "analitika-009",
+      "name": "Wildbox",
+      "company_details": "ООО «ВАЙЛДБОКС», ОГРН 1241600000608, ИНН 1683018490",
+      "service_type": "нишевой SaaS-сервис",
+      "category": "аналитика",
+      "short_description": "Специализированный сервис для аналитики Wildberries с упором на SEO, внешний трафик и дополнительные Telegram-инструменты. Полезен опытным WB-селлерам и агентствам.",
+      "tasks_solved": [
+        "конкурентная разведка на WB",
+        "SEO-оптимизация карточек",
+        "поиск внешнего трафика и инструментов продвижения"
+      ],
+      "marketplaces_supported_raw": "Wildberries",
+      "target_audience": "опытным WB-селлерам, SEO-специалистам, агентствам",
+      "main_features": [
+        "аналитика товаров, брендов и категорий",
+        "SEO, ключевые слова и кластеры",
+        "набор прикладных Telegram-ботов под разные задачи"
+      ],
+      "pricing_model": "подписка",
+      "approximate_cost": "от 3 500 ₽/мес",
+      "trial_or_demo": "нет данных",
+      "website": "https://wildbox.ru/",
+      "telegram_channel": "https://t.me/wildbox_news",
+      "telegram_support": "https://t.me/wildboxreg_bot",
+      "vk": "https://vk.com/wildbox_ru",
+      "email_raw": "info@wildbox.ru",
+      "phone_raw": "+7 (966) 888-30-29",
+      "address_or_region": "420500, Республика Татарстан, Верхнеуслонский р-н, г. Иннополис, ул. Университетская, д. 5, помещ. 115 рм 30/2",
+      "offer_or_legal_page": "https://wildbox.ru/ofertalls/",
+      "pros": [
+        "сильная экспертиза по WB",
+        "много вспомогательных ботов",
+        "понятный фокус на SEO и внешнем трафике"
+      ],
+      "cons": [
+        "только Wildberries",
+        "публичные реквизиты раскрыты слабо"
+      ],
+      "analogs_raw": "MarketGuru, MPSTATS, Маяк",
+      "usefulness_rating": 8,
+      "sources": [
+        "https://wildbox.ru/",
+        "https://t.me/wildbox_news",
+        "https://vk.com/wildbox_ru",
+        "https://wildbox.ru/ofertalls/"
+      ],
+      "marketplaces_supported": [
+        "Wildberries"
+      ],
+      "emails": [
+        "info@wildbox.ru"
+      ],
+      "phones": [
+        "+7 (966) 888-30-29"
+      ],
+      "analogs": [
+        "MarketGuru",
+        "MPSTATS",
+        "Маяк"
+      ],
+      "contacts": {
+        "website": "https://wildbox.ru/",
+        "telegram_channel": "https://t.me/wildbox_news",
+        "telegram_support": "https://t.me/wildboxreg_bot",
+        "vk": "https://vk.com/wildbox_ru",
+        "emails": [
+          "info@wildbox.ru"
+        ],
+        "phones": [
+          "+7 (966) 888-30-29"
+        ],
+        "address_or_region": "420500, Республика Татарстан, Верхнеуслонский р-н, г. Иннополис, ул. Университетская, д. 5, помещ. 115 рм 30/2",
+        "offer_or_legal_page": "https://wildbox.ru/ofertalls/"
+      },
+      "legal_entity_name": "ООО «ВАЙЛДБОКС»",
+      "inn": "1683018490",
+      "ogrn": "1241600000608",
+      "kpp": "нет данных",
+      "youtube_links": [
+        "https://www.youtube.com/channel/UCpkp0CFK6MEZZTnTS8JhjYQ"
+      ],
+      "extra_telegram_links": [
+        "http://t.me/dostavkafind_bot/?start=wildboxru_all_bots_block",
+        "http://t.me/geotiger_bot/?start=wildboxru_all_bots_block",
+        "http://t.me/keysfind_bot/?start=wildboxru_all_bots_block",
+        "http://t.me/mphire/?start=wildboxru_all_bots_block",
+        "http://t.me/promokator_bot/?start=wildboxru_all_bots_block",
+        "http://t.me/raketafind_bot/?start=wildboxru_all_bots_block",
+        "http://t.me/topfind_bot/?start=wildboxru_all_bots_block",
+        "http://t.me/trendfind_bot/?start=wildboxru_all_bots_block",
+        "http://t.me/wbcluster_bot/?start=wildboxru_all_bots_block",
+        "https://t.me/+xexatbIxXCA4ZjFi"
+      ],
+      "additional_public_docs": [
+        "https://wildbox.ru/privacy/"
+      ],
+      "remaining_gaps": [],
+      "source_count": 4
+    },
+    {
+      "service_id": "analitika-009",
+      "category_slug": "analitika",
+      "position_in_category": 9,
+      "total_in_category": 20,
+      "prev_id": "analitika-008",
+      "next_id": "analitika-010",
+      "name": "Shopstat",
+      "company_details": "нет данных",
+      "service_type": "freemium-сервис",
+      "category": "аналитика",
+      "short_description": "Доступный сервис аналитики для старта и базового контроля рынка. Используется для быстрого анализа ниш, конкурентов и своих продаж без большого порога входа.",
+      "tasks_solved": [
+        "стартовый анализ ниши",
+        "контроль продаж и остатков",
+        "базовая SEO-аналитика"
+      ],
+      "marketplaces_supported_raw": "Wildberries, Ozon, Яндекс Маркет, AliExpress",
+      "target_audience": "новичкам, небольшим магазинам, менеджерам",
+      "main_features": [
+        "аналитика товаров, брендов и поставщиков",
+        "базовая внутренняя аналитика",
+        "расширение и быстрые рыночные срезы"
+      ],
+      "pricing_model": "freemium / подписка",
+      "approximate_cost": "есть бесплатный доступ; платные тарифы — нет данных",
+      "trial_or_demo": "есть бесплатный режим",
+      "website": "https://shopstat.ru/",
+      "telegram_channel": "https://t.me/shopstat_news",
+      "telegram_support": "нет данных",
+      "vk": "https://vk.com/shopstat_news",
+      "email_raw": "нет данных",
+      "phone_raw": "нет данных",
+      "address_or_region": "нет данных",
+      "offer_or_legal_page": "https://shopstat.ru/shopstat-agreement.pdf",
+      "pros": [
+        "низкий порог входа",
+        "есть публичные TG и VK",
+        "подходит для первичного отбора товаров"
+      ],
+      "cons": [
+        "глубина аналитики ниже лидеров рынка",
+        "мало публичных контактов компании"
+      ],
+      "analogs_raw": "SellerFox, LikeStats, SellerStats",
+      "usefulness_rating": 7,
+      "sources": [
+        "https://shopstat.ru/",
+        "https://t.me/shopstat_news",
+        "https://vk.com/shopstat_news",
+        "https://shopstat.ru/shopstat-agreement.pdf"
+      ],
+      "marketplaces_supported": [
+        "Wildberries",
+        "Ozon",
+        "Яндекс Маркет",
+        "AliExpress"
+      ],
+      "emails": [],
+      "phones": [],
+      "analogs": [
+        "SellerFox",
+        "LikeStats",
+        "SellerStats"
+      ],
+      "contacts": {
+        "website": "https://shopstat.ru/",
+        "telegram_channel": "https://t.me/shopstat_news",
+        "telegram_support": "нет данных",
+        "vk": "https://vk.com/shopstat_news",
+        "emails": [],
+        "phones": [],
+        "address_or_region": "нет данных",
+        "offer_or_legal_page": "https://shopstat.ru/shopstat-agreement.pdf"
+      },
+      "legal_entity_name": "нет данных",
+      "inn": "нет данных",
+      "ogrn": "нет данных",
+      "kpp": "нет данных",
+      "youtube_links": [
+        "https://www.youtube.com/channel/UC9wCwUDvUVTrCI7akiJHCHw/featured"
+      ],
+      "extra_telegram_links": [],
+      "additional_public_docs": [],
+      "remaining_gaps": [
+        "email",
+        "phone",
+        "company_details"
+      ],
+      "source_count": 4
+    },
+    {
+      "service_id": "analitika-010",
+      "category_slug": "analitika",
+      "position_in_category": 10,
+      "total_in_category": 20,
+      "prev_id": "analitika-009",
+      "next_id": "analitika-011",
+      "name": "SellerStats",
+      "company_details": "ИП Тимохина В.В.",
+      "service_type": "SaaS-платформа",
+      "category": "аналитика",
+      "short_description": "Сервис внешней и внутренней аналитики с акцентом на понятные тарифы и ежедневную работу селлера. Хорошо подходит как компромисс между ценой и набором функций.",
+      "tasks_solved": [
+        "мониторинг продаж конкурентов",
+        "поиск ниш и трендов",
+        "анализ собственных кабинетов и поставок"
+      ],
+      "marketplaces_supported_raw": "Wildberries, Ozon, Яндекс Маркет, Мегамаркет",
+      "target_audience": "новичкам, действующим селлерам, небольшим командам",
+      "main_features": [
+        "внешняя аналитика товаров и категорий",
+        "внутренняя аналитика по API",
+        "SEO, автоответы и рекламные модули"
+      ],
+      "pricing_model": "подписка",
+      "approximate_cost": "от 2 490 ₽/мес",
+      "trial_or_demo": "есть бесплатный доступ / тестовый период",
+      "website": "https://sellerstats.ru/",
+      "telegram_channel": "https://t.me/sellerstats",
+      "telegram_support": "нет данных",
+      "vk": "нет данных",
+      "email_raw": "info@sellerstats.ru",
+      "phone_raw": "нет данных",
+      "address_or_region": "нет данных",
+      "offer_or_legal_page": "https://sellerstats.ru/rules",
+      "pros": [
+        "понятный ценовой вход",
+        "подходит для регулярной работы селлера",
+        "есть публичный Telegram-канал"
+      ],
+      "cons": [
+        "мало публичных реквизитов",
+        "бренд слабее по узнаваемости, чем топ-игроки"
+      ],
+      "analogs_raw": "Stat4Market, Shopstat, SalesFinder",
+      "usefulness_rating": 8,
+      "sources": [
+        "https://sellerstats.ru/",
+        "https://t.me/sellerstats",
+        "https://sellerstats.ru/rules"
+      ],
+      "marketplaces_supported": [
+        "Wildberries",
+        "Ozon",
+        "Яндекс Маркет",
+        "Мегамаркет"
+      ],
+      "emails": [
+        "info@sellerstats.ru"
+      ],
+      "phones": [],
+      "analogs": [
+        "Stat4Market",
+        "Shopstat",
+        "SalesFinder"
+      ],
+      "contacts": {
+        "website": "https://sellerstats.ru/",
+        "telegram_channel": "https://t.me/sellerstats",
+        "telegram_support": "нет данных",
+        "vk": "нет данных",
+        "emails": [
+          "info@sellerstats.ru"
+        ],
+        "phones": [],
+        "address_or_region": "нет данных",
+        "offer_or_legal_page": "https://sellerstats.ru/rules"
+      },
+      "legal_entity_name": "ИП Тимохина В.В",
+      "inn": "нет данных",
+      "ogrn": "нет данных",
+      "kpp": "нет данных",
+      "youtube_links": [],
+      "extra_telegram_links": [],
+      "additional_public_docs": [],
+      "remaining_gaps": [
+        "vk",
+        "phone"
+      ],
+      "source_count": 3
+    },
+    {
+      "service_id": "analitika-011",
+      "category_slug": "analitika",
+      "position_in_category": 11,
+      "total_in_category": 20,
+      "prev_id": "analitika-010",
+      "next_id": "analitika-012",
+      "name": "SalesFinder",
+      "company_details": "ООО «С-Файндер»",
+      "service_type": "сервис аналитики маркетплейсов",
+      "category": "аналитика",
+      "short_description": "Платформа внешней аналитики с упором на поиск ниш, трендов и конкурентный анализ. Используется там, где нужно быстро проверять гипотезы по товарам и запросам.",
+      "tasks_solved": [
+        "поиск трендов и новинок",
+        "анализ конкурентов на WB и Ozon",
+        "подбор запросов и мониторинг позиций"
+      ],
+      "marketplaces_supported_raw": "Wildberries, Ozon",
+      "target_audience": "селлерам, аналитикам, категорийным менеджерам",
+      "main_features": [
+        "внешняя аналитика товаров и категорий",
+        "подбор ключевых запросов",
+        "расширение и мониторинг позиций"
+      ],
+      "pricing_model": "подписка",
+      "approximate_cost": "от 3 500 ₽/мес",
+      "trial_or_demo": "нет данных",
+      "website": "https://salesfinder.ru/",
+      "telegram_channel": "https://t.me/salesfinder",
+      "telegram_support": "https://t.me/SalesFinderBot",
+      "vk": "нет данных",
+      "email_raw": "milo@elama.ru",
+      "phone_raw": "нет данных",
+      "address_or_region": "нет данных",
+      "offer_or_legal_page": "https://salesfinder.ru/contact",
+      "pros": [
+        "понятный сценарий для проверки ниш",
+        "удобен для WB и Ozon",
+        "не перегружен лишними модулями"
+      ],
+      "cons": [
+        "мало публичных контактов",
+        "почти нет открытых корпоративных реквизитов"
+      ],
+      "analogs_raw": "SellerStats, LikeStats, MPSTATS",
+      "usefulness_rating": 8,
+      "sources": [
+        "https://salesfinder.ru/",
+        "https://salesfinder.ru/contact",
+        "https://t.me/salesfinder",
+        "https://t.me/SalesFinderBot"
+      ],
+      "marketplaces_supported": [
+        "Wildberries",
+        "Ozon"
+      ],
+      "emails": [
+        "milo@elama.ru"
+      ],
+      "phones": [],
+      "analogs": [
+        "SellerStats",
+        "LikeStats",
+        "MPSTATS"
+      ],
+      "contacts": {
+        "website": "https://salesfinder.ru/",
+        "telegram_channel": "https://t.me/salesfinder",
+        "telegram_support": "https://t.me/SalesFinderBot",
+        "vk": "нет данных",
+        "emails": [
+          "milo@elama.ru"
+        ],
+        "phones": [],
+        "address_or_region": "нет данных",
+        "offer_or_legal_page": "https://salesfinder.ru/contact"
+      },
+      "legal_entity_name": "ООО «С-Файндер»",
+      "inn": "нет данных",
+      "ogrn": "нет данных",
+      "kpp": "нет данных",
+      "youtube_links": [],
+      "extra_telegram_links": [],
+      "additional_public_docs": [],
+      "remaining_gaps": [
+        "vk",
+        "phone"
+      ],
+      "source_count": 4
+    },
+    {
+      "service_id": "analitika-012",
+      "category_slug": "analitika",
+      "position_in_category": 12,
+      "total_in_category": 20,
+      "prev_id": "analitika-011",
+      "next_id": "analitika-013",
+      "name": "LikeStats",
+      "company_details": "АО «Формула Трафика», ИНН 2308276573, ОГРН 1202300065263",
+      "service_type": "сервис аналитики маркетплейсов",
+      "category": "аналитика",
+      "short_description": "Сервис внешней и внутренней аналитики с акцентом на понятные отчёты и базовую мультиплощадочность. Подходит для небольших команд и селлеров, которым нужна простая сводка по своим и чужим товарам.",
+      "tasks_solved": [
+        "поиск ниши и анализ конкурентов",
+        "контроль собственных продаж и остатков",
+        "работа с трендами и позициями"
+      ],
+      "marketplaces_supported_raw": "Wildberries, Ozon, Avito",
+      "target_audience": "новичкам, менеджерам, селлерам с небольшим и средним оборотом",
+      "main_features": [
+        "внешняя аналитика рынка",
+        "внутренняя аналитика по своим продажам",
+        "мониторинг цен, продавцов и товаров"
+      ],
+      "pricing_model": "freemium / подписка",
+      "approximate_cost": "есть бесплатный доступ; платные тарифы — нет данных",
+      "trial_or_demo": "есть бесплатный режим",
+      "website": "https://likestats.io/",
+      "telegram_channel": "https://t.me/likestats_io",
+      "telegram_support": "нет данных",
+      "vk": "https://vk.com/likestats",
+      "email_raw": "hello@likestats.io",
+      "phone_raw": "8 800 550-27-90",
+      "address_or_region": "нет данных",
+      "offer_or_legal_page": "нет данных",
+      "pros": [
+        "есть бесплатный порог входа",
+        "сочетает внешнюю и внутреннюю аналитику",
+        "простая логика для небольших команд"
+      ],
+      "cons": [
+        "мало публичных контактов",
+        "площадки шире фокуса задачи, но WB/Ozon поддерживаются"
+      ],
+      "analogs_raw": "Shopstat, SalesFinder, SellerStats",
+      "usefulness_rating": 7,
+      "sources": [
+        "https://likestats.io/",
+        "https://t.me/likestats_io",
+        "https://likestats.io/extension",
+        "https://vk.com/likestats"
+      ],
+      "marketplaces_supported": [
+        "Wildberries",
+        "Ozon",
+        "Avito"
+      ],
+      "emails": [
+        "hello@likestats.io"
+      ],
+      "phones": [
+        "8 800 550-27-90"
+      ],
+      "analogs": [
+        "Shopstat",
+        "SalesFinder",
+        "SellerStats"
+      ],
+      "contacts": {
+        "website": "https://likestats.io/",
+        "telegram_channel": "https://t.me/likestats_io",
+        "telegram_support": "нет данных",
+        "vk": "https://vk.com/likestats",
+        "emails": [
+          "hello@likestats.io"
+        ],
+        "phones": [
+          "8 800 550-27-90"
+        ],
+        "address_or_region": "нет данных",
+        "offer_or_legal_page": "нет данных"
+      },
+      "legal_entity_name": "АО «Формула Трафика»",
+      "inn": "2308276573",
+      "ogrn": "1202300065263",
+      "kpp": "нет данных",
+      "youtube_links": [
+        "https://www.youtube.com/channel/UCHkWvKCjyA3HE-rCuPNBedg"
+      ],
+      "extra_telegram_links": [],
+      "additional_public_docs": [],
+      "remaining_gaps": [
+        "legal_page"
+      ],
+      "source_count": 4
+    },
+    {
+      "service_id": "analitika-013",
+      "category_slug": "analitika",
+      "position_in_category": 13,
+      "total_in_category": 20,
+      "prev_id": "analitika-012",
+      "next_id": "analitika-014",
+      "name": "EGGHEADS",
+      "company_details": "ООО «ЭГГХЕДС», ОГРН 1207700399081",
+      "service_type": "аналитическая платформа",
+      "category": "аналитика",
+      "short_description": "Платформа с сильным акцентом на финансовую аналитику, поставки и управление прибылью на маркетплейсах. Больше подходит зрелым продавцам и брендам, чем простому старту.",
+      "tasks_solved": [
+        "поиск потерь прибыли",
+        "контроль запасов и поставок",
+        "проверка гипотез по карточкам и рекламе"
+      ],
+      "marketplaces_supported_raw": "Wildberries, Ozon",
+      "target_audience": "брендам, командам, селлерам со стабильным оборотом",
+      "main_features": [
+        "финансовая аналитика и воронка продаж",
+        "управление поставками и остатками",
+        "AI-инструменты и рабочие отчёты по бизнесу"
+      ],
+      "pricing_model": "по запросу / демо",
+      "approximate_cost": "по запросу",
+      "trial_or_demo": "есть демо",
+      "website": "https://eggheads.solutions/",
+      "telegram_channel": "https://t.me/eggheads_solutions",
+      "telegram_support": "https://t.me/EggheadsProfitBot",
+      "vk": "https://vk.com/eggheads_solutions",
+      "email_raw": "analytics@eggheads.solutions",
+      "phone_raw": "нет данных",
+      "address_or_region": "121205, Россия, г. Москва, б-р Большой, д. 42, стр. 1, эт. 3, пом. 1122, раб. 7",
+      "offer_or_legal_page": "https://eggheads.solutions/docs-privacy-bot",
+      "pros": [
+        "сильная финансовая аналитика",
+        "полезен зрелому бизнесу",
+        "заточен под управленческие решения"
+      ],
+      "cons": [
+        "мало открытых контактов и цен",
+        "избыточен для новичков"
+      ],
+      "analogs_raw": "Sellai, Seller24, JVO",
+      "usefulness_rating": 8,
+      "sources": [
+        "https://eggheads.solutions/",
+        "https://t.me/eggheads_solutions",
+        "https://vk.com/eggheads_solutions",
+        "https://t.me/EggheadsProfitBot",
+        "https://eggheads.solutions/docs-privacy-bot"
+      ],
+      "marketplaces_supported": [
+        "Wildberries",
+        "Ozon"
+      ],
+      "emails": [
+        "analytics@eggheads.solutions"
+      ],
+      "phones": [],
+      "analogs": [
+        "Sellai",
+        "Seller24",
+        "JVO"
+      ],
+      "contacts": {
+        "website": "https://eggheads.solutions/",
+        "telegram_channel": "https://t.me/eggheads_solutions",
+        "telegram_support": "https://t.me/EggheadsProfitBot",
+        "vk": "https://vk.com/eggheads_solutions",
+        "emails": [
+          "analytics@eggheads.solutions"
+        ],
+        "phones": [],
+        "address_or_region": "121205, Россия, г. Москва, б-р Большой, д. 42, стр. 1, эт. 3, пом. 1122, раб. 7",
+        "offer_or_legal_page": "https://eggheads.solutions/docs-privacy-bot"
+      },
+      "legal_entity_name": "ООО «ЭГГХЕДС»",
+      "inn": "нет данных",
+      "ogrn": "1207700399081",
+      "kpp": "нет данных",
+      "youtube_links": [],
+      "extra_telegram_links": [],
+      "additional_public_docs": [],
+      "remaining_gaps": [
+        "phone"
+      ],
+      "source_count": 5
+    },
+    {
+      "service_id": "analitika-014",
+      "category_slug": "analitika",
+      "position_in_category": 14,
+      "total_in_category": 20,
+      "prev_id": "analitika-013",
+      "next_id": "analitika-015",
+      "name": "Sellematics",
+      "company_details": "нет данных",
+      "service_type": "e-commerce аналитика",
+      "category": "аналитика",
+      "short_description": "Аналитическая платформа и исследовательский инструмент для e-commerce и маркетплейсов. Больше подходит брендам и крупным продавцам, которым нужен конкурентный и категорийный анализ.",
+      "tasks_solved": [
+        "исследование рынка и категорий",
+        "анализ конкурентов",
+        "поддержка стратегии роста по категориям"
+      ],
+      "marketplaces_supported_raw": "Wildberries, Ozon",
+      "target_audience": "брендам, крупным селлерам, аналитикам",
+      "main_features": [
+        "конкурентный анализ",
+        "исследования категорий и рынка",
+        "экспертные и обучающие материалы"
+      ],
+      "pricing_model": "по запросу",
+      "approximate_cost": "нет данных",
+      "trial_or_demo": "нет данных",
+      "website": "https://sellematics.com/",
+      "telegram_channel": "нет данных",
+      "telegram_support": "нет данных",
+      "vk": "нет данных",
+      "email_raw": "info@sellematics.com",
+      "phone_raw": "+7 (495) 414-10-11",
+      "address_or_region": "нет данных",
+      "offer_or_legal_page": "нет данных",
+      "pros": [
+        "хорош для брендового анализа",
+        "исследовательский подход, а не только отчёты",
+        "есть публичный email и телефон"
+      ],
+      "cons": [
+        "мало открытых тарифов",
+        "не самый удобный сервис для быстрого старта"
+      ],
+      "analogs_raw": "Sellmonitor, EGGHEADS, JVO",
+      "usefulness_rating": 7,
+      "sources": [
+        "https://sellematics.com/"
+      ],
+      "marketplaces_supported": [
+        "Wildberries",
+        "Ozon"
+      ],
+      "emails": [
+        "info@sellematics.com"
+      ],
+      "phones": [
+        "+7 (495) 414-10-11"
+      ],
+      "analogs": [
+        "Sellmonitor",
+        "EGGHEADS",
+        "JVO"
+      ],
+      "contacts": {
+        "website": "https://sellematics.com/",
+        "telegram_channel": "нет данных",
+        "telegram_support": "нет данных",
+        "vk": "нет данных",
+        "emails": [
+          "info@sellematics.com"
+        ],
+        "phones": [
+          "+7 (495) 414-10-11"
+        ],
+        "address_or_region": "нет данных",
+        "offer_or_legal_page": "нет данных"
+      },
+      "legal_entity_name": "нет данных",
+      "inn": "нет данных",
+      "ogrn": "нет данных",
+      "kpp": "нет данных",
+      "youtube_links": [],
+      "extra_telegram_links": [],
+      "additional_public_docs": [],
+      "remaining_gaps": [
+        "telegram_channel",
+        "vk",
+        "company_details",
+        "legal_page"
+      ],
+      "source_count": 1
+    },
+    {
+      "service_id": "analitika-015",
+      "category_slug": "analitika",
+      "position_in_category": 15,
+      "total_in_category": 20,
+      "prev_id": "analitika-014",
+      "next_id": "analitika-016",
+      "name": "JVO",
+      "company_details": "ООО «ДжейВиО»",
+      "service_type": "платформа аналитики и управления",
+      "category": "аналитика",
+      "short_description": "Платформа для аналитики, логистики, финансов и AI-автоматизации на маркетплейсах. Подходит тем, кто хочет не только смотреть отчёты, но и сразу запускать действия внутри системы.",
+      "tasks_solved": [
+        "сквозной анализ по SKU",
+        "контроль логистики и ценообразования",
+        "автоматизация действий на основе данных"
+      ],
+      "marketplaces_supported_raw": "Wildberries, Ozon",
+      "target_audience": "действующим селлерам, командам, брендам",
+      "main_features": [
+        "аналитика товарной матрицы и финансов",
+        "логистика и управленческие отчёты",
+        "AI-агенты для цен, отзывов и рекомендаций"
+      ],
+      "pricing_model": "pay-as-you-go",
+      "approximate_cost": "нет фиксированной подписки, оплата зависит от сценариев",
+      "trial_or_demo": "есть демо",
+      "website": "https://jvo.ru/",
+      "telegram_channel": "https://t.me/jvochannel",
+      "telegram_support": "нет данных",
+      "vk": "https://vk.com/jvo_mp",
+      "email_raw": "hi@jvo.ru",
+      "phone_raw": "+7 (499) 322-09-33",
+      "address_or_region": "Россия, г. Москва, Рубцовская наб., д. 3, стр. 1",
+      "offer_or_legal_page": "https://jvo.ru/agreement",
+      "pros": [
+        "аналитика связана с действиями",
+        "есть публичные TG и VK",
+        "сильный акцент на автоматизации"
+      ],
+      "cons": [
+        "сложнее обычных аналитических сервисов",
+        "финальная стоимость зависит от использования"
+      ],
+      "analogs_raw": "EGGHEADS, Seller24, Sellmonitor",
+      "usefulness_rating": 8,
+      "sources": [
+        "https://jvo.ru/",
+        "https://t.me/jvochannel",
+        "https://vk.com/jvo_mp",
+        "https://jvo.ru/agreement"
+      ],
+      "marketplaces_supported": [
+        "Wildberries",
+        "Ozon"
+      ],
+      "emails": [
+        "hi@jvo.ru"
+      ],
+      "phones": [
+        "+7 (499) 322-09-33"
+      ],
+      "analogs": [
+        "EGGHEADS",
+        "Seller24",
+        "Sellmonitor"
+      ],
+      "contacts": {
+        "website": "https://jvo.ru/",
+        "telegram_channel": "https://t.me/jvochannel",
+        "telegram_support": "нет данных",
+        "vk": "https://vk.com/jvo_mp",
+        "emails": [
+          "hi@jvo.ru"
+        ],
+        "phones": [
+          "+7 (499) 322-09-33"
+        ],
+        "address_or_region": "Россия, г. Москва, Рубцовская наб., д. 3, стр. 1",
+        "offer_or_legal_page": "https://jvo.ru/agreement"
+      },
+      "legal_entity_name": "ООО «ДжейВиО»",
+      "inn": "нет данных",
+      "ogrn": "нет данных",
+      "kpp": "нет данных",
+      "youtube_links": [
+        "https://www.youtube.com/@jvo-ru"
+      ],
+      "extra_telegram_links": [],
+      "additional_public_docs": [
+        "https://jvo.ru/privacy"
+      ],
+      "remaining_gaps": [],
+      "source_count": 4
+    },
+    {
+      "service_id": "analitika-016",
+      "category_slug": "analitika",
+      "position_in_category": 16,
+      "total_in_category": 20,
+      "prev_id": "analitika-015",
+      "next_id": "analitika-017",
+      "name": "Seller24",
+      "company_details": "ООО «БИСПОУК РУС», ИНН 7703700520, ОГРН 1097746319692",
+      "service_type": "аналитическая платформа",
+      "category": "аналитика",
+      "short_description": "Платформа для анализа прибыльности, unit-экономики, ABC и поставок. Сильнее всего полезна там, где селлеру нужно управлять чистой маржой, а не только выручкой.",
+      "tasks_solved": [
+        "расчёт unit-экономики",
+        "анализ прибыльности рекламы",
+        "планирование поставок по регионам"
+      ],
+      "marketplaces_supported_raw": "Wildberries, Ozon",
+      "target_audience": "действующим селлерам, финансовым менеджерам, операционным командам",
+      "main_features": [
+        "отчёты по маржинальной прибыли",
+        "ABC-анализ и прибыльность по SKU",
+        "прогноз поставок по регионам и складам"
+      ],
+      "pricing_model": "по запросу / пакетные услуги",
+      "approximate_cost": "нет данных",
+      "trial_or_demo": "нет данных",
+      "website": "https://seller24.ru/",
+      "telegram_channel": "https://t.me/hacking_marketplaces",
+      "telegram_support": "нет данных",
+      "vk": "https://vk.com/seller24",
+      "email_raw": "info@seller24.ru, pr@seller24.ru",
+      "phone_raw": "+7 (495) 126-21-23, +7 (495) 136-22-82",
+      "address_or_region": "Москва, Пресненская набережная, д. 8, стр. 1",
+      "offer_or_legal_page": "нет данных",
+      "pros": [
+        "сильный фокус на чистой прибыли",
+        "полезен для операционного управления",
+        "закрывает unit-экономику и рекламу"
+      ],
+      "cons": [
+        "мало публичных контактов и соцсетей",
+        "практически нет открытых реквизитов"
+      ],
+      "analogs_raw": "EGGHEADS, Sellai, MPsimple",
+      "usefulness_rating": 8,
+      "sources": [
+        "https://seller24.ru/",
+        "https://t.me/hacking_marketplaces",
+        "https://vk.com/seller24"
+      ],
+      "marketplaces_supported": [
+        "Wildberries",
+        "Ozon"
+      ],
+      "emails": [
+        "info@seller24.ru",
+        "pr@seller24.ru"
+      ],
+      "phones": [
+        "+7 (495) 126-21-23",
+        "+7 (495) 136-22-82"
+      ],
+      "analogs": [
+        "EGGHEADS",
+        "Sellai",
+        "MPsimple"
+      ],
+      "contacts": {
+        "website": "https://seller24.ru/",
+        "telegram_channel": "https://t.me/hacking_marketplaces",
+        "telegram_support": "нет данных",
+        "vk": "https://vk.com/seller24",
+        "emails": [
+          "info@seller24.ru",
+          "pr@seller24.ru"
+        ],
+        "phones": [
+          "+7 (495) 126-21-23",
+          "+7 (495) 136-22-82"
+        ],
+        "address_or_region": "Москва, Пресненская набережная, д. 8, стр. 1",
+        "offer_or_legal_page": "нет данных"
+      },
+      "legal_entity_name": "ООО «БИСПОУК РУС»",
+      "inn": "7703700520",
+      "ogrn": "1097746319692",
+      "kpp": "нет данных",
+      "youtube_links": [
+        "https://www.youtube.com/@seller24"
+      ],
+      "extra_telegram_links": [],
+      "additional_public_docs": [],
+      "remaining_gaps": [
+        "legal_page"
+      ],
+      "source_count": 3
+    },
+    {
+      "service_id": "analitika-017",
+      "category_slug": "analitika",
+      "position_in_category": 17,
+      "total_in_category": 20,
+      "prev_id": "analitika-016",
+      "next_id": "analitika-018",
+      "name": "MP Manager",
+      "company_details": "ООО «МПМГР», ИНН 9729387440, ОГРН 1247700695208",
+      "service_type": "сервис аналитики и автоматизации",
+      "category": "аналитика",
+      "short_description": "Платформа, где аналитика тесно связана с рекламой, мониторингом и автоматизацией действий на маркетплейсах. Хороший вариант для тех, кто работает с управлением кампаниями и позициями.",
+      "tasks_solved": [
+        "анализ рекламы и карточек",
+        "мониторинг конкурентов и позиций",
+        "автоматизация ставок и уведомлений"
+      ],
+      "marketplaces_supported_raw": "Wildberries, Ozon, Яндекс Маркет",
+      "target_audience": "действующим селлерам, рекламным менеджерам, небольшим командам",
+      "main_features": [
+        "аналитика и мониторинг карточек",
+        "управление рекламой и автоуведомления",
+        "модульный набор инструментов под задачи команды"
+      ],
+      "pricing_model": "модульная оплата",
+      "approximate_cost": "нет данных",
+      "trial_or_demo": "нет данных",
+      "website": "https://mpmgr.ru/analytics",
+      "telegram_channel": "https://t.me/mpmgr_news",
+      "telegram_support": "нет данных",
+      "vk": "нет данных",
+      "email_raw": "info@mpmgr.ru",
+      "phone_raw": "нет данных",
+      "address_or_region": "г. Москва, ул. Большая Очаковская, д. 12, к. 1, оф./кв. 5",
+      "offer_or_legal_page": "https://mpmgr.ru/analytics",
+      "pros": [
+        "есть публичные реквизиты компании",
+        "сильная связка аналитики с рекламой",
+        "модульный подход к использованию сервиса"
+      ],
+      "cons": [
+        "итоговая стоимость неочевидна заранее",
+        "VK и дополнительные контакты не вынесены явно"
+      ],
+      "analogs_raw": "Sellmonitor, SalesFinder, MPsimple",
+      "usefulness_rating": 7,
+      "sources": [
+        "https://mpmgr.ru/analytics",
+        "https://t.me/mpmgr_news"
+      ],
+      "marketplaces_supported": [
+        "Wildberries",
+        "Ozon",
+        "Яндекс Маркет"
+      ],
+      "emails": [
+        "info@mpmgr.ru"
+      ],
+      "phones": [],
+      "analogs": [
+        "Sellmonitor",
+        "SalesFinder",
+        "MPsimple"
+      ],
+      "contacts": {
+        "website": "https://mpmgr.ru/analytics",
+        "telegram_channel": "https://t.me/mpmgr_news",
+        "telegram_support": "нет данных",
+        "vk": "нет данных",
+        "emails": [
+          "info@mpmgr.ru"
+        ],
+        "phones": [],
+        "address_or_region": "г. Москва, ул. Большая Очаковская, д. 12, к. 1, оф./кв. 5",
+        "offer_or_legal_page": "https://mpmgr.ru/analytics"
+      },
+      "legal_entity_name": "ООО «МПМГР»",
+      "inn": "9729387440",
+      "ogrn": "1247700695208",
+      "kpp": "нет данных",
+      "youtube_links": [],
+      "extra_telegram_links": [],
+      "additional_public_docs": [],
+      "remaining_gaps": [
+        "vk",
+        "phone"
+      ],
+      "source_count": 2
+    },
+    {
+      "service_id": "analitika-018",
+      "category_slug": "analitika",
+      "position_in_category": 18,
+      "total_in_category": 20,
+      "prev_id": "analitika-017",
+      "next_id": "analitika-019",
+      "name": "MPsimple",
+      "company_details": "ИП Войстроченко Дмитрий Игоревич, ИНН 325302511548, ОГРН 321508100261704",
+      "service_type": "сервис аналитики для WB",
+      "category": "аналитика",
+      "short_description": "Практичный сервис для Wildberries с упором на отчёты, финансы, остатки и конкурентов. Подходит селлеру, которому нужен понятный набор ежедневных инструментов без перегруза.",
+      "tasks_solved": [
+        "анализ продаж и удержаний",
+        "контроль остатков и поставок",
+        "мониторинг конкурентов и цен"
+      ],
+      "marketplaces_supported_raw": "Wildberries",
+      "target_audience": "WB-селлерам, менеджерам, небольшим магазинам",
+      "main_features": [
+        "аналитика заказов, возвратов и комиссий",
+        "финансовый учёт и ABC-анализ",
+        "SEO, реклама и мониторинг позиций"
+      ],
+      "pricing_model": "подписка",
+      "approximate_cost": "от 3 890 ₽/мес",
+      "trial_or_demo": "нет данных",
+      "website": "https://mpsimple.ru/",
+      "telegram_channel": "https://t.me/MPsimple",
+      "telegram_support": "нет данных",
+      "vk": "нет данных",
+      "email_raw": "info@mpsimple.ru",
+      "phone_raw": "нет данных",
+      "address_or_region": "нет данных",
+      "offer_or_legal_page": "https://mpsimple.ru/oferta",
+      "pros": [
+        "понятная логика ежедневной работы",
+        "есть Telegram-канал",
+        "хороший ценовой диапазон для WB-селлера"
+      ],
+      "cons": [
+        "только Wildberries",
+        "публичные реквизиты и телефоны почти не раскрыты"
+      ],
+      "analogs_raw": "Stat4Market, MP Manager, Seller24",
+      "usefulness_rating": 7,
+      "sources": [
+        "https://mpsimple.ru/",
+        "https://t.me/MPsimple",
+        "https://mpsimple.ru/oferta"
+      ],
+      "marketplaces_supported": [
+        "Wildberries"
+      ],
+      "emails": [
+        "info@mpsimple.ru"
+      ],
+      "phones": [],
+      "analogs": [
+        "Stat4Market",
+        "MP Manager",
+        "Seller24"
+      ],
+      "contacts": {
+        "website": "https://mpsimple.ru/",
+        "telegram_channel": "https://t.me/MPsimple",
+        "telegram_support": "нет данных",
+        "vk": "нет данных",
+        "emails": [
+          "info@mpsimple.ru"
+        ],
+        "phones": [],
+        "address_or_region": "нет данных",
+        "offer_or_legal_page": "https://mpsimple.ru/oferta"
+      },
+      "legal_entity_name": "ИП Войстроченко Дмитрий Игоревич",
+      "inn": "325302511548",
+      "ogrn": "321508100261704",
+      "kpp": "нет данных",
+      "youtube_links": [
+        "https://www.youtube.com/channel/UCD-42yT_lLwmMsBr7A-6j5g"
+      ],
+      "extra_telegram_links": [],
+      "additional_public_docs": [],
+      "remaining_gaps": [
+        "vk",
+        "phone"
+      ],
+      "source_count": 3
+    },
+    {
+      "service_id": "analitika-019",
+      "category_slug": "analitika",
+      "position_in_category": 19,
+      "total_in_category": 20,
+      "prev_id": "analitika-018",
+      "next_id": "analitika-020",
+      "name": "UStats",
+      "company_details": "Самозанятый Мякин Руслан Валерьевич, ИНН 272003972079",
+      "service_type": "аналитика с AI-помощником",
+      "category": "аналитика",
+      "short_description": "Лёгкий сервис для контроля прибыли, продаж и остатков с выгрузкой в Google Sheets и доступом к API. Подходит тем, кто хочет недорогую внутреннюю аналитику и гибкость в своих отчётах.",
+      "tasks_solved": [
+        "контроль прибыли и маржи",
+        "автоматизация отчётов по продажам",
+        "анализ остатков и цен конкурентов"
+      ],
+      "marketplaces_supported_raw": "Wildberries, Ozon",
+      "target_audience": "небольшим селлерам, аналитикам, командам с Google Sheets",
+      "main_features": [
+        "готовые отчёты по прибыли и движению товара",
+        "AI-помощник и кастомная аналитика",
+        "API и автоматическая выгрузка в Google Sheets"
+      ],
+      "pricing_model": "подписка / API-оплата",
+      "approximate_cost": "от 1 500 ₽/мес",
+      "trial_or_demo": "нет данных",
+      "website": "https://ustats.io/",
+      "telegram_channel": "нет данных",
+      "telegram_support": "https://t.me/inwismut",
+      "vk": "нет данных",
+      "email_raw": "miakin.ruslan@gmail.com",
+      "phone_raw": "нет данных",
+      "address_or_region": "нет данных",
+      "offer_or_legal_page": "https://ustats.io/offer.html",
+      "pros": [
+        "низкий вход по цене",
+        "есть публичный ИНН и оферта",
+        "удобно для тех, кто живёт в Google Sheets"
+      ],
+      "cons": [
+        "продукт менее известен на рынке",
+        "мало публичных корпоративных контактов"
+      ],
+      "analogs_raw": "Sellai, Seller24, MPsimple",
+      "usefulness_rating": 7,
+      "sources": [
+        "https://ustats.io/",
+        "https://ustats.io/offer.html",
+        "https://t.me/inwismut"
+      ],
+      "marketplaces_supported": [
+        "Wildberries",
+        "Ozon"
+      ],
+      "emails": [
+        "miakin.ruslan@gmail.com"
+      ],
+      "phones": [],
+      "analogs": [
+        "Sellai",
+        "Seller24",
+        "MPsimple"
+      ],
+      "contacts": {
+        "website": "https://ustats.io/",
+        "telegram_channel": "нет данных",
+        "telegram_support": "https://t.me/inwismut",
+        "vk": "нет данных",
+        "emails": [
+          "miakin.ruslan@gmail.com"
+        ],
+        "phones": [],
+        "address_or_region": "нет данных",
+        "offer_or_legal_page": "https://ustats.io/offer.html"
+      },
+      "legal_entity_name": "Самозанятый Мякин Руслан Валерьевич",
+      "inn": "272003972079",
+      "ogrn": "нет данных",
+      "kpp": "нет данных",
+      "youtube_links": [],
+      "extra_telegram_links": [],
+      "additional_public_docs": [],
+      "remaining_gaps": [
+        "telegram_channel",
+        "vk",
+        "phone"
+      ],
+      "source_count": 3
+    },
+    {
+      "service_id": "analitika-020",
+      "category_slug": "analitika",
+      "position_in_category": 20,
+      "total_in_category": 20,
+      "prev_id": "analitika-019",
+      "next_id": "нет данных",
+      "name": "Sellai",
+      "company_details": "нет данных",
+      "service_type": "финансовая аналитика с AI",
+      "category": "аналитика",
+      "short_description": "Сервис финансовой аналитики для маркетплейсов с акцентом на прибыль, расходы, рекламу и AI-подсказки. Больше подходит для управленческих решений, чем для первичного поиска ниши.",
+      "tasks_solved": [
+        "контроль P&L и себестоимости",
+        "анализ затрат на рекламу по артикулу",
+        "регулярные отчёты по ключевым бизнес-метрикам"
+      ],
+      "marketplaces_supported_raw": "поддержка через API маркетплейсов, точный список площадок на открытой странице не раскрыт",
+      "target_audience": "селлерам с оборотом, финменеджерам, собственникам",
+      "main_features": [
+        "дашборды по прибыли, возвратам и логистике",
+        "AI-помощник по данным",
+        "отчёты и интеграции по API"
+      ],
+      "pricing_model": "подписка",
+      "approximate_cost": "от 2 900 ₽/мес",
+      "trial_or_demo": "нет данных",
+      "website": "https://sellai.ru/",
+      "telegram_channel": "нет данных",
+      "telegram_support": "нет данных",
+      "vk": "нет данных",
+      "email_raw": "нет данных",
+      "phone_raw": "нет данных",
+      "address_or_region": "нет данных",
+      "offer_or_legal_page": "нет данных",
+      "pros": [
+        "сильный фокус на финансовой аналитике",
+        "подходит для управленческой отчётности",
+        "AI-подсказки по данным"
+      ],
+      "cons": [
+        "мало публичных контактов и реквизитов",
+        "открытое описание площадок и тарифов ограничено"
+      ],
+      "analogs_raw": "Seller24, UStats, EGGHEADS",
+      "usefulness_rating": 7,
+      "sources": [
+        "https://sellai.ru/"
+      ],
+      "marketplaces_supported": [
+        "поддержка через API маркетплейсов",
+        "точный список площадок на открытой странице не раскрыт"
+      ],
+      "emails": [],
+      "phones": [],
+      "analogs": [
+        "Seller24",
+        "UStats",
+        "EGGHEADS"
+      ],
+      "contacts": {
+        "website": "https://sellai.ru/",
+        "telegram_channel": "нет данных",
+        "telegram_support": "нет данных",
+        "vk": "нет данных",
+        "emails": [],
+        "phones": [],
+        "address_or_region": "нет данных",
+        "offer_or_legal_page": "нет данных"
+      },
+      "legal_entity_name": "нет данных",
+      "inn": "нет данных",
+      "ogrn": "нет данных",
+      "kpp": "нет данных",
+      "youtube_links": [],
+      "extra_telegram_links": [],
+      "additional_public_docs": [],
+      "remaining_gaps": [
+        "telegram_channel",
+        "vk",
+        "email",
+        "phone",
+        "company_details",
+        "legal_page"
+      ],
+      "source_count": 1
+    }
+  ]
+}
