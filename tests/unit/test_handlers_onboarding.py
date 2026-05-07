@@ -1,6 +1,5 @@
 """Tests for onboarding FSM handlers in bot.handlers."""
 
-from unittest.mock import AsyncMock, MagicMock
 
 from shared.db.enums import EntityType, TaxRegime
 from bot.handlers import build_router
@@ -8,7 +7,6 @@ from tests.unit.bot_helpers import (
     collect_handlers,
     make_message,
     make_state,
-    make_services,
     patch_handler_deps,
 )
 

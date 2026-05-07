@@ -8,7 +8,7 @@ from aiogram.types import CallbackQuery, LabeledPrice, Message, PreCheckoutQuery
 
 from bot.callbacks import SubscriptionCallback
 from bot.handlers._helpers import show_referral, show_subscription
-from bot.keyboards import finance_shortcuts_keyboard, main_menu_keyboard
+from bot.keyboards import main_menu_keyboard
 from bot.messages import payment_success_text
 from shared.config import get_settings
 from shared.db.enums import SubscriptionPlan

@@ -1,14 +1,13 @@
 """Tests for regime selection FSM handlers in bot.handlers."""
 
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from bot.handlers import build_router
 from tests.unit.bot_helpers import (
     collect_handlers,
     make_message,
     make_state,
-    make_services,
     patch_handler_deps,
 )
 

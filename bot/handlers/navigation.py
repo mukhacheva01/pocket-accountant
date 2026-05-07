@@ -6,12 +6,11 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from bot.callbacks import NavigationCallback, SubscriptionCallback
+from bot.callbacks import NavigationCallback
 from bot.handlers._helpers import (
     AI_TOPIC_PROMPTS,
     MAIN_MENU_BUTTONS,
     _category_label,
-    _normalize_finance_text,
     do_ai_answer,
     handle_tax_calculation,
     prompt_finance_input,

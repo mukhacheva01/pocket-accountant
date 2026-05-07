@@ -7,7 +7,6 @@ from tests.unit.bot_helpers import (
     collect_handlers,
     make_message,
     make_state,
-    make_services,
     make_db_user,
     patch_handler_deps,
 )

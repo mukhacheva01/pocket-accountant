@@ -7,7 +7,6 @@ from bot.handlers import build_router
 from tests.unit.bot_helpers import (
     collect_handlers,
     make_callback_query,
-    make_services,
     make_state,
     patch_handler_deps,
 )

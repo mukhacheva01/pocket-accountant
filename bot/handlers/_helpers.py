@@ -208,7 +208,6 @@ async def sync_profile_events_and_reminders(
 
 
 async def show_home(message: Message, actor: TelegramUser | None = None, *, edit: bool = False) -> None:
-    settings = get_settings()
     actor = actor or message.from_user
     async with SessionFactory() as session:
         services = build_services(session)
