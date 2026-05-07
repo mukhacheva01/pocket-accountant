@@ -1,8 +1,10 @@
 """Shared helpers for bot handler tests."""
 
+from contextlib import ExitStack
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiogram import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message, User as TelegramUser
 
@@ -10,6 +12,19 @@ from shared.db.enums import (
     EntityType,
     TaxRegime,
 )
+
+# Modules that import SessionFactory / build_services / get_settings directly
+_HANDLER_MODULES = [
+    "bot.handlers._helpers",
+    "bot.handlers.start",
+    "bot.handlers.onboarding",
+    "bot.handlers.finance",
+    "bot.handlers.events",
+    "bot.handlers.ai_consult",
+    "bot.handlers.subscription",
+    "bot.handlers.regime",
+    "bot.handlers.navigation",
+]
 
 
 def make_user(
@@ -94,6 +109,66 @@ def make_profile(
         "offset_days": [3, 1],
     }
     return profile
+
+
+def collect_handlers(router: Router, observer_name: str) -> dict:
+    """Collect handlers from *router* and all its sub-routers recursively."""
+    result = {}
+    observer = getattr(router, observer_name, None)
+    if observer:
+        for h in observer.handlers:
+            result[h.callback.__name__] = h
+    for sub in router.sub_routers:
+        result.update(collect_handlers(sub, observer_name))
+    return result
+
+
+def patch_handler_deps(services=None):
+    """Return (ctx, svc, session) where *ctx* is a context-manager that patches
+    SessionFactory / build_services / get_settings across all handler modules."""
+    svc = services or make_services()
+
+    session = AsyncMock()
+    session.__aenter__ = AsyncMock(return_value=session)
+    session.__aexit__ = AsyncMock(return_value=False)
+    session.execute = AsyncMock()
+    session.commit = AsyncMock()
+    session.add = MagicMock()
+    result_mock = MagicMock()
+    result_mock.scalars.return_value.all.return_value = []
+    result_mock.scalar.return_value = 0
+    result_mock.scalar_one_or_none.return_value = None
+    session.execute = AsyncMock(return_value=result_mock)
+
+    settings_mock = MagicMock(
+        stars_price_basic=150,
+        stars_price_pro=400,
+        stars_price_annual=3500,
+    )
+
+    class _Ctx:
+        def __enter__(self):
+            self._stack = ExitStack()
+            self._stack.__enter__()
+            for mod in _HANDLER_MODULES:
+                try:
+                    self._stack.enter_context(patch(f"{mod}.SessionFactory", return_value=session))
+                except AttributeError:
+                    pass
+                try:
+                    self._stack.enter_context(patch(f"{mod}.build_services", return_value=svc))
+                except AttributeError:
+                    pass
+                try:
+                    self._stack.enter_context(patch(f"{mod}.get_settings", return_value=settings_mock))
+                except AttributeError:
+                    pass
+            return self
+
+        def __exit__(self, *exc):
+            return self._stack.__exit__(*exc)
+
+    return _Ctx(), svc, session
 
 
 def make_services():
