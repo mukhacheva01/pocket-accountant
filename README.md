@@ -4,7 +4,7 @@ MVP scaffold for a Telegram "AI accountant in your pocket" focused on Russian en
 
 ## Stack
 
-- `Python`
+- `Python 3.11`
 - `aiogram` for Telegram bot flows and FSM
 - `FastAPI` for webhook delivery, health checks, and admin endpoints
 - `SQLAlchemy + PostgreSQL` for data storage
@@ -13,16 +13,14 @@ MVP scaffold for a Telegram "AI accountant in your pocket" focused on Russian en
 
 ## Project layout
 
-- `src/accountant_bot/bot/` Telegram handlers, states, keyboards, callbacks
-- `src/accountant_bot/services/` business logic and orchestration
-- `src/accountant_bot/repositories/` database access
-- `src/accountant_bot/db/` models and session setup
-- `src/accountant_bot/jobs/` cron-like tasks and scheduler bootstrap
-- `src/accountant_bot/app/` FastAPI entrypoint
-- `src/accountant_bot/contracts/` payload contracts shared across modules
+- `shared/` common code for all services (config, db, contracts, secrets)
+- `bot/` Telegram bot service (handlers, keyboards, states, backend_client)
+- `backend/` FastAPI backend (routers, services, repositories, integrations)
+- `worker/` APScheduler worker (cron tasks, Bot singleton for outgoing messages)
 - `prompts/` AI prompt templates
 - `data/` demo seed data that must be legally reviewed before production use
 - `docs/` architecture, backlog, deployment, and production guidance
+- `tests/` unit and integration tests (pytest, ≥75% coverage)
 
 ## Quick start
 
@@ -50,19 +48,34 @@ alembic upgrade head
 5. Load demo templates:
 
 ```bash
-PYTHONPATH=src python3 -m accountant_bot.db.bootstrap
+python3 -m scripts.seed_db
 ```
 
 6. Run API:
 
 ```bash
-uvicorn accountant_bot.app.api:create_app --factory --reload
+make run-api
 ```
 
-7. Run worker:
+7. Run bot:
 
 ```bash
-python3 -m accountant_bot.jobs.worker
+make run-bot
+```
+
+8. Run worker:
+
+```bash
+make run-worker
+```
+
+## Testing
+
+```bash
+make test         # run tests
+make test-cov     # run tests with coverage (≥75% required)
+make lint         # ruff lint
+make ci           # lint + tests with coverage
 ```
 
 ## Production deploy
@@ -72,6 +85,13 @@ docker compose up -d
 ```
 
 Set `TELEGRAM_DELIVERY_MODE=polling` in `.env` for servers without a domain and TLS.
+
+## CI/CD
+
+- **CI** (`.github/workflows/ci.yml`): runs on every push/PR to `main` — lint (ruff) + tests with coverage ≥75%.
+- **CD** (`.github/workflows/cd.yml`): runs on push to `main` — lint, tests, rsync to server, `docker compose up -d --build`, smoke test (`curl /health`).
+
+Required GitHub Secrets for CD: `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_PATH`, `SSH_PRIVATE_KEY`.
 
 ## Refactoring
 

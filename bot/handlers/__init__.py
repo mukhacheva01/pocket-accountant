@@ -672,7 +672,7 @@ def build_router() -> Router:
                 return False
             if remaining <= 1 and not services.subscription.is_active(sub):
                 # Warn about last request
-                await message.answer(f"⚠️ Это последний бесплатный AI-запрос сегодня.", parse_mode="Markdown")
+                await message.answer("⚠️ Это последний бесплатный AI-запрос сегодня.", parse_mode="Markdown")
             return True
 
     # ── Handlers ──

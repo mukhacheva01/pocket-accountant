@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from pydantic import BaseModel, Field
-from sqlalchemy import and_, desc, func, or_, select
+from sqlalchemy import desc, func, or_, select
 
 from shared.config import Settings, get_settings
 from shared.db.enums import LawUpdateReviewStatus, PaymentStatus, SubscriptionPlan

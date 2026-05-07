@@ -1,6 +1,5 @@
 import re
 from dataclasses import dataclass, field
-from datetime import date
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Optional
 

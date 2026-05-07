@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from typing import AsyncGenerator
 
-from fastapi import Depends
 
 from shared.config import Settings, get_settings
 from shared.db.session import SessionFactory
