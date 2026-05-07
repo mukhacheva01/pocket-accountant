@@ -105,3 +105,24 @@ class TestBackendClient:
             mock_req.return_value = {"result": {}}
             await client.parse_tax_query("усн 6 доход 500к", profile={})
             mock_req.assert_awaited_once()
+
+    async def test_track_activity(self, client):
+        with patch.object(client, "_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = {
+                "user": {"id": "u1"}, "profile": None, "subscription": None,
+            }
+            result = await client.track_activity(
+                telegram_id=123,
+                username="alice",
+                first_name="Alice",
+                event_type="command",
+                payload={"command": "start"},
+            )
+            mock_req.assert_awaited_once_with("POST", "/users/activity", json={
+                "telegram_id": 123,
+                "username": "alice",
+                "first_name": "Alice",
+                "event_type": "command",
+                "payload": {"command": "start"},
+            })
+            assert result["user"]["id"] == "u1"
