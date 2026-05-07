@@ -111,3 +111,21 @@ class BackendClient:
             "query": query,
             "profile": profile or {},
         })
+
+    # ── Activity ──
+
+    async def track_activity(
+        self,
+        telegram_id: int,
+        username: str | None,
+        first_name: str | None,
+        event_type: str,
+        payload: dict | None = None,
+    ) -> dict:
+        return await self._request("POST", "/users/activity", json={
+            "telegram_id": telegram_id,
+            "username": username,
+            "first_name": first_name,
+            "event_type": event_type,
+            "payload": payload or {},
+        })
