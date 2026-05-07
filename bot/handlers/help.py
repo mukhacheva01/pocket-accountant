@@ -9,10 +9,12 @@ from aiogram.types import Message
 from bot.handlers._helpers import show_help
 
 
-router = Router()
+def make_router() -> Router:
+    router = Router()
 
+    @router.message(Command("help"))
+    @router.message(F.text == "❓ Помощь")
+    async def help_handler(message: Message) -> None:
+        await show_help(message)
 
-@router.message(Command("help"))
-@router.message(F.text == "❓ Помощь")
-async def help_handler(message: Message) -> None:
-    await show_help(message)
+    return router

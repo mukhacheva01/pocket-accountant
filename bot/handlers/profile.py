@@ -9,10 +9,12 @@ from aiogram.types import Message
 from bot.handlers._helpers import show_profile
 
 
-router = Router()
+def make_router() -> Router:
+    router = Router()
 
+    @router.message(Command("profile"))
+    @router.message(F.text == "👤 Профиль")
+    async def profile_handler(message: Message) -> None:
+        await show_profile(message)
 
-@router.message(Command("profile"))
-@router.message(F.text == "👤 Профиль")
-async def profile_handler(message: Message) -> None:
-    await show_profile(message)
+    return router

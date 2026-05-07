@@ -1,7 +1,7 @@
 """Bot handlers — split into domain modules.
 
-Each module exposes its own ``router``.  ``build_router()`` composes them
-into a single parent router that the dispatcher includes.
+Each module exposes ``make_router()`` factory.  ``build_router()`` composes
+them into a single parent router that the dispatcher includes.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from bot.handlers import (
     start,
     subscription,
 )
-from bot.handlers._helpers import (  # noqa: F401 — re-export for backward compat
+from bot.handlers._helpers import (  # noqa: F401
     AI_TOPIC_PROMPTS,
     COUNTERPARTIES_MAP,
     ENTITY_TYPE_LABELS,
@@ -68,16 +68,14 @@ from bot.handlers._helpers import (  # noqa: F401 — re-export for backward com
 def build_router() -> Router:
     """Compose all handler sub-routers into a single parent router."""
     parent = Router()
-    # Order matters: specific state handlers before catch-all.
-    parent.include_router(start.router)
-    parent.include_router(onboarding.router)
-    parent.include_router(help.router)
-    parent.include_router(profile.router)
-    parent.include_router(events.router)
-    parent.include_router(finance.router)
-    parent.include_router(ai_consult.router)
-    parent.include_router(subscription.router)
-    parent.include_router(regime.router)
-    # Navigation + catch-all must be last.
-    parent.include_router(navigation.router)
+    parent.include_router(start.make_router())
+    parent.include_router(onboarding.make_router())
+    parent.include_router(help.make_router())
+    parent.include_router(profile.make_router())
+    parent.include_router(events.make_router())
+    parent.include_router(finance.make_router())
+    parent.include_router(ai_consult.make_router())
+    parent.include_router(subscription.make_router())
+    parent.include_router(regime.make_router())
+    parent.include_router(navigation.make_router())
     return parent
