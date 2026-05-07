@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from backend.dependencies import get_services_dep
-
-from shared.contracts.payloads import FinanceRecordPayload
+from shared.db.enums import FinanceRecordType
 
 router = APIRouter(prefix="/finance", tags=["finance"])
 
@@ -18,30 +17,28 @@ class FinanceRecordRequest(BaseModel):
     record_type: str  # income | expense
 
 
+class FinanceFromTextRequest(BaseModel):
+    source_text: str
+
+
 @router.post("/{user_id}/record")
 async def add_record(
-    user_id: str, req: FinanceRecordRequest, services = Depends(get_services_dep),
+    user_id: str, req: FinanceRecordRequest, services=Depends(get_services_dep),
 ):
-    from backend.services.finance_parser import FinanceTextParser
-    from shared.db.enums import FinanceRecordType
+    record = await services.finance.add_from_text(user_id, req.source_text)
+    return {
+        "record_id": str(record.id),
+        "amount": str(record.amount),
+        "category": record.category,
+        "record_type": record.record_type.value,
+    }
 
-    parser = FinanceTextParser()
-    parsed = parser.parse(req.source_text)
-    if parsed is None:
-        return {"error": "parse_failed", "message": "Не удалось разобрать текст"}
 
-    record_type = FinanceRecordType.INCOME if req.record_type == "income" else FinanceRecordType.EXPENSE
-    payload = FinanceRecordPayload(
-        record_type=record_type,
-        amount=parsed.amount,
-        category=parsed.category,
-        subcategory=parsed.subcategory,
-        operation_date=date.today(),
-        source_text=req.source_text,
-        parsed_payload={"category_label": parsed.category_label},
-        confidence=parsed.confidence,
-    )
-    record = await services.finance.add_record(user_id, payload)
+@router.post("/{user_id}/add-from-text")
+async def add_from_text(
+    user_id: str, req: FinanceFromTextRequest, services=Depends(get_services_dep),
+):
+    record = await services.finance.add_from_text(user_id, req.source_text)
     return {
         "record_id": str(record.id),
         "amount": str(record.amount),
@@ -51,9 +48,22 @@ async def add_record(
 
 
 @router.get("/{user_id}/report")
-async def get_report(user_id: str, days: int = 30, services = Depends(get_services_dep)):
+async def get_report(user_id: str, days: int = 30, services=Depends(get_services_dep)):
     balance = await services.finance.balance(user_id)
     return balance
+
+
+@router.get("/{user_id}/full-report")
+async def get_full_report(user_id: str, days: int = 30, services=Depends(get_services_dep)):
+    report = await services.finance.report(
+        user_id, date.today() - timedelta(days=days), date.today(),
+    )
+    return {
+        "income": float(report["totals"]["income"]),
+        "expense": float(report["totals"]["expense"]),
+        "profit": float(report["profit"]),
+        "top_expenses": report["top_expenses"],
+    }
 
 
 @router.get("/{user_id}/records")
@@ -61,18 +71,14 @@ async def get_records(
     user_id: str,
     record_type: str = "all",
     limit: int = 20,
-    services = Depends(get_services_dep),
+    services=Depends(get_services_dep),
 ):
-    from shared.db.enums import FinanceRecordType
-
     if record_type == "income":
-        records = await services.finance.recent(user_id, FinanceRecordType.INCOME, limit)
+        records = await services.finance.list_records(user_id, record_type=FinanceRecordType.INCOME, limit=limit)
     elif record_type == "expense":
-        records = await services.finance.recent(user_id, FinanceRecordType.EXPENSE, limit)
+        records = await services.finance.list_records(user_id, record_type=FinanceRecordType.EXPENSE, limit=limit)
     else:
-        income = await services.finance.recent(user_id, FinanceRecordType.INCOME, limit)
-        expense = await services.finance.recent(user_id, FinanceRecordType.EXPENSE, limit)
-        records = sorted(income + expense, key=lambda r: r.operation_date, reverse=True)[:limit]
+        records = await services.finance.list_records(user_id, limit=limit)
 
     return {
         "records": [

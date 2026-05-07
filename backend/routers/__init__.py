@@ -1,12 +1,14 @@
 from fastapi import APIRouter
 
-from backend.routers.health import router as health_router
-from backend.routers.users import router as users_router
+from backend.routers.ai import router as ai_router
+from backend.routers.documents import router as documents_router
 from backend.routers.events import router as events_router
 from backend.routers.finance import router as finance_router
-from backend.routers.ai import router as ai_router
+from backend.routers.health import router as health_router
+from backend.routers.laws import router as laws_router
 from backend.routers.subscription import router as subscription_router
 from backend.routers.tax import router as tax_router
+from backend.routers.users import router as users_router
 
 
 def build_api_router() -> APIRouter:
@@ -18,4 +20,6 @@ def build_api_router() -> APIRouter:
     api.include_router(ai_router)
     api.include_router(subscription_router)
     api.include_router(tax_router)
+    api.include_router(documents_router)
+    api.include_router(laws_router)
     return api

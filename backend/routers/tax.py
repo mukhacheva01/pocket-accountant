@@ -52,3 +52,28 @@ async def parse_query(req: TaxQueryRequest):
         parsed = TaxQueryParser.parse(req.query, req.profile)
         return {"is_calculation": True, "parsed": parsed.__dict__ if parsed else None}
     return {"is_calculation": False}
+
+
+class CompareRegimesRequest(BaseModel):
+    activity: str
+    monthly_income: Decimal
+    has_employees: bool = False
+    counterparties: str = "mixed"
+    region: str = "Москва"
+
+
+@router.post("/compare-regimes")
+async def compare_regimes(req: CompareRegimesRequest):
+    result = TaxCalculatorService.compare_regimes(
+        activity=req.activity,
+        monthly_income=req.monthly_income,
+        has_employees=req.has_employees,
+        counterparties=req.counterparties,
+        region=req.region,
+    )
+    return {
+        "recommendation": result.recommendation,
+        "summary": result.summary,
+        "comparisons": result.comparisons,
+        "rendered": result.render(),
+    }

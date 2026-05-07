@@ -1,5 +1,6 @@
 import logging
-from datetime import date, timedelta
+import re
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
 from aiogram import F, Router
@@ -16,6 +17,7 @@ from aiogram.types import (
     User as TelegramUser,
 )
 
+from bot.backend_client import BackendClient
 from bot.callbacks import EventActionCallback, NavigationCallback, PageCallback, SubscriptionCallback
 from bot.keyboards import (
     ai_consult_keyboard,
@@ -34,7 +36,6 @@ from bot.keyboards import (
     regime_activity_keyboard,
     regime_income_keyboard,
     reminders_shortcuts_keyboard,
-    retry_keyboard,
     section_shortcuts_keyboard,
     settings_shortcuts_keyboard,
     subscription_keyboard,
@@ -42,7 +43,6 @@ from bot.keyboards import (
     yes_no_keyboard,
 )
 from bot.messages import (
-    ai_consult_exit_text,
     ai_consult_welcome_text,
     help_text,
     onboarding_complete_text,
@@ -53,17 +53,7 @@ from bot.messages import (
     welcome_text,
 )
 from bot.states import AIConsultStates, FinanceInputStates, OnboardingStates, RegimeSelectionStates
-from shared.clock import utcnow
 from shared.config import get_settings
-from backend.services.rate_limit import allow_ai_request
-from shared.db.enums import EntityType, FinanceRecordType, PaymentStatus, SubscriptionPlan, TaxRegime
-from shared.db.session import SessionFactory
-from backend.services.container import build_services
-from backend.services.finance_parser import EXPENSE_CATEGORY_LABELS, INCOME_CATEGORY_LABELS
-from backend.services.onboarding import OnboardingDraft
-from backend.services.profile_matching import ProfileContext
-from backend.services.subscription import PLAN_DETAILS
-from backend.services.tax_engine import TaxQueryParser
 
 
 logger = logging.getLogger(__name__)
@@ -71,29 +61,55 @@ logger = logging.getLogger(__name__)
 PLANNED_ENTITY_TEXT = "Пока не открыт"
 
 ENTITY_TYPE_MAP = {
-    "ИП": EntityType.INDIVIDUAL_ENTREPRENEUR,
-    "ООО": EntityType.LIMITED_COMPANY,
-    "Самозанятый": EntityType.SELF_EMPLOYED,
+    "ИП": "individual_entrepreneur",
+    "ООО": "limited_company",
+    "Самозанятый": "self_employed",
 }
 
 TAX_REGIME_MAP = {
-    "УСН 6%": TaxRegime.USN_INCOME,
-    "УСН доходы-расходы": TaxRegime.USN_INCOME_EXPENSE,
-    "ОСНО": TaxRegime.OSNO,
-    "НПД": TaxRegime.NPD,
+    "УСН 6%": "usn_income",
+    "УСН доходы-расходы": "usn_income_expense",
+    "ОСНО": "osno",
+    "НПД": "npd",
 }
 
 ENTITY_TYPE_LABELS = {
-    EntityType.INDIVIDUAL_ENTREPRENEUR.value: "ИП",
-    EntityType.LIMITED_COMPANY.value: "ООО",
-    EntityType.SELF_EMPLOYED.value: "Самозанятый",
+    "individual_entrepreneur": "ИП",
+    "limited_company": "ООО",
+    "self_employed": "Самозанятый",
 }
 
 TAX_REGIME_LABELS = {
-    TaxRegime.USN_INCOME.value: "УСН 6%",
-    TaxRegime.USN_INCOME_EXPENSE.value: "УСН доходы-расходы",
-    TaxRegime.OSNO.value: "ОСНО",
-    TaxRegime.NPD.value: "НПД",
+    "usn_income": "УСН 6%",
+    "usn_income_expense": "УСН доходы-расходы",
+    "osno": "ОСНО",
+    "npd": "НПД",
+}
+
+INCOME_CATEGORY_LABELS = {
+    "sales": "Продажи",
+    "services": "Услуги",
+    "rent": "Аренда",
+    "investments": "Инвестиции",
+    "other": "Прочее",
+}
+
+EXPENSE_CATEGORY_LABELS = {
+    "rent": "Аренда",
+    "salary": "Зарплата",
+    "taxes": "Налоги",
+    "supplies": "Расходные материалы",
+    "marketing": "Маркетинг",
+    "transport": "Транспорт",
+    "communication": "Связь",
+    "insurance": "Страхование",
+    "other": "Прочее",
+}
+
+PLAN_LABELS = {
+    "basic": "Базовый",
+    "pro": "Про",
+    "annual": "Годовой",
 }
 
 REGIME_ACTIVITY_MAP = {
@@ -109,6 +125,30 @@ COUNTERPARTIES_MAP = {
     "Юрлица/ИП": "business",
     "Смешанно": "mixed",
 }
+
+PLAN_DETAILS: dict[str, dict] = {
+    "basic": {"label": "Базовый", "days": 30, "ai_limit": 50},
+    "pro": {"label": "Про", "days": 30, "ai_limit": 999},
+    "annual": {"label": "Годовой", "days": 365, "ai_limit": 999},
+}
+
+_AMOUNT_PATTERN = re.compile(
+    r"(?P<number>\d[\d\s.,]*)\s*(?P<suffix>к|k|тыс|т|млн|m)?",
+    flags=re.IGNORECASE,
+)
+
+
+def _parse_amount(raw_text: str) -> Decimal | None:
+    match = _AMOUNT_PATTERN.search(raw_text.lower())
+    if match is None:
+        return None
+    amount = Decimal(match.group("number").replace(" ", "").replace(",", "."))
+    suffix = (match.group("suffix") or "").lower()
+    if suffix in {"к", "k", "тыс", "т"}:
+        amount *= Decimal("1000")
+    elif suffix in {"млн", "m"}:
+        amount *= Decimal("1000000")
+    return amount
 
 MAIN_MENU_BUTTONS = {
     "🏠 Главная",
@@ -142,8 +182,8 @@ def _tax_regime_label(value: str) -> str:
     return TAX_REGIME_LABELS.get(value, value)
 
 
-def _category_label(record_type: FinanceRecordType, category: str) -> str:
-    if record_type == FinanceRecordType.INCOME:
+def _category_label(record_type: str, category: str) -> str:
+    if record_type == "income":
         return INCOME_CATEGORY_LABELS.get(category, category)
     return EXPENSE_CATEGORY_LABELS.get(category, category)
 
@@ -164,30 +204,34 @@ def _normalize_finance_text(source_text: str, record_kind: str) -> str:
     return source_text if _contains_hint(source_text, hints) else f"расход {source_text}"
 
 
-def _planned_entity_label(profile) -> str | None:
-    if profile.reminder_settings.get("planning_entity"):
+def _planned_entity_label(profile: dict) -> str | None:
+    reminder_settings = profile.get("reminder_settings", {})
+    if reminder_settings.get("planning_entity"):
         return "Пока не открыт"
     return None
 
 
-def _format_records(records) -> str:
+def _format_records(records: list[dict]) -> str:
     if not records:
         return "Записей пока нет."
     lines = []
     for record in records:
-        sign = "+" if record.record_type == FinanceRecordType.INCOME else "-"
-        label = _category_label(record.record_type, record.category)
-        lines.append(f"{record.operation_date.isoformat()} | {sign}{record.amount} ₽ | {label}")
+        sign = "+" if record["record_type"] == "income" else "-"
+        label = _category_label(record["record_type"], record["category"])
+        lines.append(f"{record['operation_date']} | {sign}{record['amount']} ₽ | {label}")
     return "\n".join(lines)
 
 
 def _format_money(value) -> str:
+    if isinstance(value, str):
+        value = float(value)
     return f"{value:,.2f}".replace(",", " ").replace(".", ",")
 
 
 def build_router() -> Router:
     router = Router()
     settings = get_settings()
+    api = BackendClient()
 
     async def respond(
         message: Message,
@@ -205,73 +249,54 @@ def build_router() -> Router:
                 pass
         await message.answer(text, reply_markup=reply_markup, parse_mode=parse_mode)
 
-    async def load_profile(actor: TelegramUser):
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=actor.id,
-                username=actor.username,
-                first_name=actor.first_name,
-                timezone="Europe/Moscow",
-            )
-            profile = await services.onboarding.load_profile(str(user.id))
-            return user, profile
-
-    async def sync_profile_events_and_reminders(
-        session,
-        services,
-        user_id: str,
-        profile_context: ProfileContext,
-        reminder_settings: dict,
-        timezone: str,
-    ) -> None:
-        await services.calendar.sync_user_events(user_id, profile_context)
-        user_events = await services.calendar.upcoming(user_id, 370)
-        for user_event in user_events:
-            await services.reminders.create_reminders_for_event(user_event, reminder_settings, timezone)
+    async def load_profile(actor: TelegramUser) -> tuple[dict, dict | None]:
+        user = await api.ensure_user(
+            telegram_id=actor.id,
+            username=actor.username,
+            first_name=actor.first_name,
+            timezone="Europe/Moscow",
+        )
+        profile = await api.get_profile(user["user_id"])
+        if not profile.get("has_profile"):
+            return user, None
+        return user, profile
 
     # ── Show helpers ──
 
     async def show_home(message: Message, actor: TelegramUser | None = None, *, edit: bool = False) -> None:
         actor = actor or message.from_user
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=actor.id, username=actor.username,
-                first_name=actor.first_name, timezone="Europe/Moscow",
-            )
-            profile = await services.onboarding.load_profile(str(user.id))
-            if profile is None:
-                await respond(message, welcome_text(actor.first_name), reply_markup=onboarding_entity_type_keyboard(), edit=edit)
-                return
+        user, profile = await load_profile(actor)
+        if profile is None:
+            await respond(message, welcome_text(actor.first_name), reply_markup=onboarding_entity_type_keyboard(), edit=edit)
+            return
 
-            events = await services.calendar.upcoming(str(user.id), 7)
-            balance = await services.finance.balance(str(user.id))
-            sub = await services.subscription.get_subscription(str(user.id))
-            can_ai, remaining = await services.subscription.can_use_ai(user, sub)
-            next_event = events[0] if events else None
-            planned = _planned_entity_label(profile)
+        events_data = await api.upcoming_events(user["user_id"], 7)
+        balance = await api.get_finance_report(user["user_id"])
+        sub_data = await api.subscription_status(user["user_id"])
+        events = events_data.get("events", [])
+        next_event = events[0] if events else None
+        planned = _planned_entity_label(profile)
 
-            lines = [
-                "🏠 *Главная*",
-                f"👤 {planned or _entity_label(profile.entity_type.value)} | {_tax_regime_label(profile.tax_regime.value)}",
-                f"💰 Баланс: *{_format_money(balance['balance'])}* ₽",
-                f"📈 Доходы: {_format_money(balance['income'])} ₽ | 📉 Расходы: {_format_money(balance['expense'])} ₽",
-            ]
-            if next_event is not None:
-                title = next_event.calendar_event.title if next_event.calendar_event else "Событие"
-                lines.append(f"📅 Ближайшее: *{title}* до {next_event.due_date.isoformat()}")
-            else:
-                lines.append("📅 Ближайших дедлайнов нет")
+        lines = [
+            "🏠 *Главная*",
+            f"👤 {planned or _entity_label(profile.get('entity_type', ''))} | {_tax_regime_label(profile.get('tax_regime', ''))}",
+            f"💰 Баланс: *{_format_money(balance.get('balance', 0))}* ₽",
+            f"📈 Доходы: {_format_money(balance.get('income', 0))} ₽ | 📉 Расходы: {_format_money(balance.get('expense', 0))} ₽",
+        ]
+        if next_event is not None:
+            title = next_event.get("title", "Событие")
+            lines.append(f"📅 Ближайшее: *{title}* до {next_event.get('due_date', '')}")
+        else:
+            lines.append("📅 Ближайших дедлайнов нет")
 
-            if not services.subscription.is_active(sub):
-                lines.append(f"💬 AI-запросов сегодня: *{remaining}*")
+        if not sub_data.get("is_active"):
+            lines.append(f"💬 AI-запросов сегодня: *{sub_data.get('remaining_ai_requests', 0)}*")
 
-            await respond(
-                message, "\n".join(lines),
-                reply_markup=section_shortcuts_keyboard() if edit else main_menu_keyboard(),
-                edit=edit,
-            )
+        await respond(
+            message, "\n".join(lines),
+            reply_markup=section_shortcuts_keyboard() if edit else main_menu_keyboard(),
+            edit=edit,
+        )
 
     async def show_profile(message: Message, actor: TelegramUser | None = None, *, edit: bool = False) -> None:
         actor = actor or message.from_user
@@ -282,85 +307,68 @@ def build_router() -> Router:
         planned = _planned_entity_label(profile)
         text = (
             f"👤 *Профиль бизнеса*\n\n"
-            f"Тип: *{planned or _entity_label(profile.entity_type.value)}*\n"
-            f"Режим: *{_tax_regime_label(profile.tax_regime.value)}*\n"
-            f"Сотрудники: {'да' if profile.has_employees else 'нет'}\n"
-            f"Маркетплейсы: {'да' if profile.marketplaces_enabled else 'нет'}\n"
-            f"Регион: {profile.region}"
+            f"Тип: *{planned or _entity_label(profile.get('entity_type', ''))}*\n"
+            f"Режим: *{_tax_regime_label(profile.get('tax_regime', ''))}*\n"
+            f"Сотрудники: {'да' if profile.get('has_employees') else 'нет'}\n"
+            f"Маркетплейсы: {'да' if profile.get('marketplaces_enabled') else 'нет'}\n"
+            f"Регион: {profile.get('region', 'не указан')}"
         )
         await respond(message, text, reply_markup=profile_shortcuts_keyboard(), edit=edit)
 
     async def show_events(message: Message, actor: TelegramUser | None = None, *, edit: bool = False) -> None:
         actor = actor or message.from_user
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=actor.id, username=actor.username,
-                first_name=actor.first_name, timezone="Europe/Moscow",
-            )
-            events = await services.calendar.upcoming(str(user.id), 14)
-            if not events:
-                await respond(message, "📅 На ближайшие 14 дней событий нет.", reply_markup=section_shortcuts_keyboard(), edit=edit)
-                return
-            lines = ["📅 *Ближайшие события:*\n"]
-            for item in events[:5]:
-                title = item.calendar_event.title if item.calendar_event else "Событие"
-                lines.append(f"• *{title}* — до {item.due_date.isoformat()}")
-            await respond(message, "\n".join(lines), reply_markup=event_actions_keyboard(str(events[0].id)), edit=edit)
+        user, _ = await load_profile(actor)
+        events_data = await api.upcoming_events(user["user_id"], 14)
+        events = events_data.get("events", [])
+        if not events:
+            await respond(message, "📅 На ближайшие 14 дней событий нет.", reply_markup=section_shortcuts_keyboard(), edit=edit)
+            return
+        lines = ["📅 *Ближайшие события:*\n"]
+        for item in events[:5]:
+            title = item.get("title", "Событие")
+            lines.append(f"• *{title}* — до {item.get('due_date', '')}")
+        await respond(message, "\n".join(lines), reply_markup=event_actions_keyboard(events[0].get("user_event_id", "")), edit=edit)
 
     async def show_calendar(message: Message, actor: TelegramUser | None = None, *, edit: bool = False) -> None:
         actor = actor or message.from_user
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=actor.id, username=actor.username,
-                first_name=actor.first_name, timezone="Europe/Moscow",
-            )
-            events = await services.calendar.upcoming(str(user.id), 30)
-            if not events:
-                await respond(message, "📅 На ближайшие 30 дней событий нет.", reply_markup=section_shortcuts_keyboard(), edit=edit)
-                return
-            lines = ["📅 *Календарь на 30 дней:*\n"]
-            for item in events[:10]:
-                title = item.calendar_event.title if item.calendar_event else "Событие"
-                lines.append(f"{item.due_date.isoformat()} — {title}")
-            await respond(message, "\n".join(lines), reply_markup=section_shortcuts_keyboard(), edit=edit)
+        user, _ = await load_profile(actor)
+        events_data = await api.upcoming_events(user["user_id"], 30)
+        events = events_data.get("events", [])
+        if not events:
+            await respond(message, "📅 На ближайшие 30 дней событий нет.", reply_markup=section_shortcuts_keyboard(), edit=edit)
+            return
+        lines = ["📅 *Календарь на 30 дней:*\n"]
+        for item in events[:10]:
+            title = item.get("title", "Событие")
+            lines.append(f"{item.get('due_date', '')} — {title}")
+        await respond(message, "\n".join(lines), reply_markup=section_shortcuts_keyboard(), edit=edit)
 
     async def show_overdue(message: Message, actor: TelegramUser | None = None, *, edit: bool = False) -> None:
         actor = actor or message.from_user
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=actor.id, username=actor.username,
-                first_name=actor.first_name, timezone="Europe/Moscow",
-            )
-            events = await services.calendar.overdue(str(user.id))
-            overdue = [item for item in events if item.due_date < date.today()]
-            if not overdue:
-                await respond(message, "✅ Просроченных событий нет!", reply_markup=section_shortcuts_keyboard(), edit=edit)
-                return
-            lines = ["🔴 *Просроченные события:*\n"]
-            for item in overdue[:10]:
-                title = item.calendar_event.title if item.calendar_event else "Событие"
-                lines.append(f"• *{title}* — до {item.due_date.isoformat()}")
-            await respond(message, "\n".join(lines), reply_markup=section_shortcuts_keyboard(), edit=edit)
+        user, _ = await load_profile(actor)
+        overdue_data = await api.overdue_events(user["user_id"])
+        overdue = overdue_data.get("events", [])
+        if not overdue:
+            await respond(message, "✅ Просроченных событий нет!", reply_markup=section_shortcuts_keyboard(), edit=edit)
+            return
+        lines = ["🔴 *Просроченные события:*\n"]
+        for item in overdue[:10]:
+            title = item.get("title", "Событие")
+            lines.append(f"• *{title}* — до {item.get('due_date', '')}")
+        await respond(message, "\n".join(lines), reply_markup=section_shortcuts_keyboard(), edit=edit)
 
     async def show_documents(message: Message, actor: TelegramUser | None = None, *, edit: bool = False) -> None:
         actor = actor or message.from_user
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=actor.id, username=actor.username,
-                first_name=actor.first_name, timezone="Europe/Moscow",
-            )
-            documents = await services.documents.upcoming_documents(str(user.id))
-            if not documents:
-                await respond(message, "📋 Обязательных подач в ближайшие 30 дней нет.", reply_markup=documents_shortcuts_keyboard(), edit=edit)
-                return
-            lines = ["📋 *Что нужно подать:*\n"]
-            for item in documents[:5]:
-                lines.append(f"• *{item['title']}* до {item['due_date']}\n  {item['action_required']}")
-            await respond(message, "\n".join(lines), reply_markup=documents_shortcuts_keyboard(), edit=edit)
+        user, _ = await load_profile(actor)
+        documents_data = await api.upcoming_documents(user["user_id"])
+        documents = documents_data if isinstance(documents_data, list) else documents_data.get("documents", [])
+        if not documents:
+            await respond(message, "📋 Обязательных подач в ближайшие 30 дней нет.", reply_markup=documents_shortcuts_keyboard(), edit=edit)
+            return
+        lines = ["📋 *Что нужно подать:*\n"]
+        for item in documents[:5]:
+            lines.append(f"• *{item['title']}* до {item['due_date']}\n  {item['action_required']}")
+        await respond(message, "\n".join(lines), reply_markup=documents_shortcuts_keyboard(), edit=edit)
 
     async def show_reminders(message: Message, actor: TelegramUser | None = None, *, edit: bool = False) -> None:
         actor = actor or message.from_user
@@ -368,7 +376,7 @@ def build_router() -> Router:
         if profile is None:
             await respond(message, welcome_text(actor.first_name), reply_markup=onboarding_entity_type_keyboard(), edit=edit)
             return
-        s = profile.reminder_settings
+        s = profile.get("reminder_settings", {})
         offsets = s.get("offset_days", [3, 1])
         text = (
             "🔔 *Напоминания*\n\n"
@@ -382,86 +390,64 @@ def build_router() -> Router:
 
     async def show_finance(message: Message, actor: TelegramUser | None = None, *, edit: bool = False) -> None:
         actor = actor or message.from_user
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=actor.id, username=actor.username,
-                first_name=actor.first_name, timezone="Europe/Moscow",
-            )
-            profile = await services.onboarding.load_profile(str(user.id))
-            report = await services.finance.report(str(user.id), date.today() - timedelta(days=30), date.today())
-            tax_base = report["totals"]["income"]
-            if profile is not None and profile.tax_regime == TaxRegime.USN_INCOME_EXPENSE:
-                tax_base = report["profit"]
-            lines = [
-                "📊 *Финансы за 30 дней*\n",
-                f"📈 Доходы: *{_format_money(report['totals']['income'])}* ₽",
-                f"📉 Расходы: *{_format_money(report['totals']['expense'])}* ₽",
-                f"💰 Прибыль: *{_format_money(report['profit'])}* ₽",
-                f"📋 Налоговая база: {_format_money(tax_base)} ₽",
-            ]
-            if report["top_expenses"]:
-                top = ", ".join(f"{_category_label(FinanceRecordType.EXPENSE, cat)}: {amt}" for cat, amt in report["top_expenses"][:3])
-                lines.append(f"\nТоп расходов: {top}")
-            await respond(message, "\n".join(lines), reply_markup=finance_shortcuts_keyboard(), edit=edit)
+        user, profile = await load_profile(actor)
+        report = await api.get_full_report(user["user_id"], 30)
+        income = report.get("income", 0)
+        expense = report.get("expense", 0)
+        profit = report.get("profit", 0)
+        tax_base = income
+        if profile is not None and profile.get("tax_regime") == "usn_income_expense":
+            tax_base = profit
+        lines = [
+            "📊 *Финансы за 30 дней*\n",
+            f"📈 Доходы: *{_format_money(income)}* ₽",
+            f"📉 Расходы: *{_format_money(expense)}* ₽",
+            f"💰 Прибыль: *{_format_money(profit)}* ₽",
+            f"📋 Налоговая база: {_format_money(tax_base)} ₽",
+        ]
+        top_expenses = report.get("top_expenses", [])
+        if top_expenses:
+            top = ", ".join(f"{_category_label('expense', cat)}: {amt}" for cat, amt in top_expenses[:3])
+            lines.append(f"\nТоп расходов: {top}")
+        await respond(message, "\n".join(lines), reply_markup=finance_shortcuts_keyboard(), edit=edit)
 
     async def show_balance(message: Message, actor: TelegramUser | None = None, *, edit: bool = False) -> None:
         actor = actor or message.from_user
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=actor.id, username=actor.username,
-                first_name=actor.first_name, timezone="Europe/Moscow",
-            )
-            balance = await services.finance.balance(str(user.id))
-            text = (
-                "💰 *Баланс за текущий месяц*\n\n"
-                f"📈 Доходы: *{_format_money(balance['income'])}* ₽\n"
-                f"📉 Расходы: *{_format_money(balance['expense'])}* ₽\n"
-                f"💰 Баланс: *{_format_money(balance['balance'])}* ₽"
-            )
-            await respond(message, text, reply_markup=finance_shortcuts_keyboard(), edit=edit)
+        user, _ = await load_profile(actor)
+        balance = await api.get_finance_report(user["user_id"])
+        text = (
+            "💰 *Баланс за текущий месяц*\n\n"
+            f"📈 Доходы: *{_format_money(balance.get('income', 0))}* ₽\n"
+            f"📉 Расходы: *{_format_money(balance.get('expense', 0))}* ₽\n"
+            f"💰 Баланс: *{_format_money(balance.get('balance', 0))}* ₽"
+        )
+        await respond(message, text, reply_markup=finance_shortcuts_keyboard(), edit=edit)
 
-    async def show_record_list(message: Message, record_type: FinanceRecordType, actor: TelegramUser | None = None, *, edit: bool = False) -> None:
+    async def show_record_list(message: Message, record_type: str, actor: TelegramUser | None = None, *, edit: bool = False) -> None:
         actor = actor or message.from_user
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=actor.id, username=actor.username,
-                first_name=actor.first_name, timezone="Europe/Moscow",
-            )
-            records = await services.finance.list_records(str(user.id), record_type=record_type, limit=20)
-            emoji = "📈" if record_type == FinanceRecordType.INCOME else "📉"
-            title = "Доходы" if record_type == FinanceRecordType.INCOME else "Расходы"
-            await respond(message, f"{emoji} *{title}:*\n\n{_format_records(records)}", reply_markup=finance_shortcuts_keyboard(), edit=edit)
+        user, _ = await load_profile(actor)
+        records_data = await api.get_finance_records(user["user_id"], record_type=record_type, limit=20)
+        records = records_data.get("records", [])
+        emoji = "📈" if record_type == "income" else "📉"
+        title = "Доходы" if record_type == "income" else "Расходы"
+        await respond(message, f"{emoji} *{title}:*\n\n{_format_records(records)}", reply_markup=finance_shortcuts_keyboard(), edit=edit)
 
     async def show_laws(message: Message, actor: TelegramUser | None = None, *, edit: bool = False) -> None:
         actor = actor or message.from_user
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=actor.id, username=actor.username,
-                first_name=actor.first_name, timezone="Europe/Moscow",
-            )
-            profile = await services.onboarding.load_profile(str(user.id))
-            if profile is None:
-                await respond(message, welcome_text(actor.first_name), reply_markup=onboarding_entity_type_keyboard(), edit=edit)
-                return
-            context = ProfileContext(
-                entity_type=profile.entity_type, tax_regime=profile.tax_regime,
-                has_employees=profile.has_employees, marketplaces_enabled=profile.marketplaces_enabled,
-                region=profile.region, industry=profile.industry,
-                reminder_offsets=profile.reminder_settings.get("offset_days", [3, 1]),
-            )
-            updates = await services.laws.relevant_updates(context, min_importance=70)
-            if not updates:
-                await respond(message, "📰 Новых обновлений для твоего профиля нет.", reply_markup=laws_shortcuts_keyboard(), edit=edit)
-                return
-            lines = ["📰 *Новости законов:*\n"]
-            for item in updates[:5]:
-                effective = item.effective_date.isoformat() if item.effective_date else "дата не указана"
-                lines.append(f"• *{item.title}*\n  Вступает: {effective}")
-            await respond(message, "\n".join(lines), reply_markup=laws_shortcuts_keyboard(), edit=edit)
+        user, profile = await load_profile(actor)
+        if profile is None:
+            await respond(message, welcome_text(actor.first_name), reply_markup=onboarding_entity_type_keyboard(), edit=edit)
+            return
+        laws_data = await api.relevant_laws(user["user_id"])
+        updates = laws_data if isinstance(laws_data, list) else laws_data.get("updates", [])
+        if not updates:
+            await respond(message, "📰 Новых обновлений для твоего профиля нет.", reply_markup=laws_shortcuts_keyboard(), edit=edit)
+            return
+        lines = ["📰 *Новости законов:*\n"]
+        for item in updates[:5]:
+            effective = item.get("effective_date", "дата не указана")
+            lines.append(f"• *{item.get('title', '')}*\n  Вступает: {effective}")
+        await respond(message, "\n".join(lines), reply_markup=laws_shortcuts_keyboard(), edit=edit)
 
     async def show_settings(message: Message, *, edit: bool = False) -> None:
         await respond(
@@ -476,59 +462,44 @@ def build_router() -> Router:
 
     async def show_subscription(message: Message, actor: TelegramUser | None = None, *, edit: bool = False) -> None:
         actor = actor or message.from_user
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=actor.id, username=actor.username,
-                first_name=actor.first_name, timezone="Europe/Moscow",
-            )
-            sub = await services.subscription.get_subscription(str(user.id))
-            is_active = services.subscription.is_active(sub)
-            if is_active:
-                plan_label = PLAN_DETAILS.get(sub.plan, {}).get("label", "Активна")
-                expires = sub.expires_at.strftime("%d.%m.%Y") if sub.expires_at else "—"
-                text = subscription_status_text(plan_label, expires, True)
-                await respond(message, text, reply_markup=subscription_manage_keyboard(), edit=edit)
-            else:
-                prices = {
-                    "basic": settings.stars_price_basic,
-                    "pro": settings.stars_price_pro,
-                    "annual": settings.stars_price_annual,
-                }
-                can_ai, remaining = await services.subscription.can_use_ai(user, sub)
-                text = paywall_text(remaining)
-                await respond(message, text, reply_markup=subscription_keyboard(prices), edit=edit)
+        user, _ = await load_profile(actor)
+        sub_data = await api.subscription_status(user["user_id"])
+        is_active = sub_data.get("is_active", False)
+        prices = {
+            "basic": settings.stars_price_basic,
+            "pro": settings.stars_price_pro,
+            "annual": settings.stars_price_annual,
+        }
+        if is_active:
+            plan_label = PLAN_LABELS.get(sub_data.get("plan", ""), "Активна")
+            expires = sub_data.get("expires_at", "—")
+            if expires and expires != "—":
+                try:
+                    expires = datetime.fromisoformat(expires).strftime("%d.%m.%Y")
+                except (ValueError, TypeError):
+                    pass
+            text = subscription_status_text(plan_label, expires, True)
+            await respond(message, text, reply_markup=subscription_manage_keyboard(), edit=edit)
+        else:
+            remaining = sub_data.get("remaining_ai_requests", 0)
+            text = paywall_text(remaining)
+            await respond(message, text, reply_markup=subscription_keyboard(prices), edit=edit)
 
     async def show_referral(message: Message, actor: TelegramUser | None = None, *, edit: bool = False) -> None:
         actor = actor or message.from_user
+        user, _ = await load_profile(actor)
         bot_info = await message.bot.me()
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=actor.id, username=actor.username,
-                first_name=actor.first_name, timezone="Europe/Moscow",
-            )
-            # Count referrals
-            from sqlalchemy import select, func
-            from shared.db.models import User
-            result = await session.execute(
-                select(func.count()).select_from(User).where(User.referred_by == str(actor.id))
-            )
-            ref_count = result.scalar() or 0
-            text = referral_text(bot_info.username, actor.id, ref_count, user.referral_bonus_requests)
-            await respond(message, text, reply_markup=section_shortcuts_keyboard(), edit=edit)
+        info = await api.referral_info(user["user_id"])
+        text = referral_text(bot_info.username, actor.id, info.get("count", 0), info.get("bonus_days_earned", 0))
+        await respond(message, text, reply_markup=section_shortcuts_keyboard(), edit=edit)
 
     async def show_ai_consult(message: Message, state: FSMContext, actor: TelegramUser | None = None, *, edit: bool = False) -> None:
         actor = actor or message.from_user
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=actor.id, username=actor.username,
-                first_name=actor.first_name, timezone="Europe/Moscow",
-            )
-            sub = await services.subscription.get_subscription(str(user.id))
-            is_active = services.subscription.is_active(sub)
-            can_use, remaining = await services.subscription.can_use_ai(user, sub)
+        user, _ = await load_profile(actor)
+        sub_data = await api.subscription_status(user["user_id"])
+        is_active = sub_data.get("is_active", False)
+        can_use = sub_data.get("can_use_ai", True)
+        remaining = sub_data.get("remaining_ai_requests", 0)
 
         if not can_use:
             prices = {
@@ -549,72 +520,32 @@ def build_router() -> Router:
 
     async def do_ai_answer(message: Message, question: str) -> None:
         """Shared AI answer logic for consult mode and topic shortcuts."""
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=message.from_user.id, username=message.from_user.username,
-                first_name=message.from_user.first_name, timezone="Europe/Moscow",
-            )
-            sub = await services.subscription.get_subscription(str(user.id))
-            can_use, remaining = await services.subscription.can_use_ai(user, sub)
+        user, _ = await load_profile(message.from_user)
+        sub_data = await api.subscription_status(user["user_id"])
+        can_use = sub_data.get("can_use_ai", True)
 
-            if not can_use:
-                prices = {
-                    "basic": settings.stars_price_basic,
-                    "pro": settings.stars_price_pro,
-                    "annual": settings.stars_price_annual,
-                }
-                await message.answer(paywall_text(0), reply_markup=subscription_keyboard(prices), parse_mode="Markdown")
-                return
+        if not can_use:
+            prices = {
+                "basic": settings.stars_price_basic,
+                "pro": settings.stars_price_pro,
+                "annual": settings.stars_price_annual,
+            }
+            await message.answer(paywall_text(0), reply_markup=subscription_keyboard(prices), parse_mode="Markdown")
+            return
 
-            if not await allow_ai_request(settings, str(user.id)):
-                await message.answer("⚠️ Слишком много запросов. Подожди минуту и повтори.", parse_mode="Markdown")
-                return
+        await message.bot.send_chat_action(message.chat.id, "typing")
 
-            # Typing indicator
-            await message.bot.send_chat_action(message.chat.id, "typing")
+        result = await api.ask_ai(user["user_id"], question)
+        response_text = result.get("text", "")
 
-            profile = await services.onboarding.load_profile(str(user.id))
+        footer = ""
+        is_active = sub_data.get("is_active", False)
+        if not is_active:
+            new_remaining = result.get("remaining_ai_requests", sub_data.get("remaining_ai_requests", 0))
+            if isinstance(new_remaining, int) and new_remaining <= 2:
+                footer = f"\n\n💬 Осталось запросов: *{new_remaining}*"
 
-            # Chat history
-            from sqlalchemy import select, desc
-            from shared.db.models import AIDialog
-            result = await session.execute(
-                select(AIDialog)
-                .where(AIDialog.user_id == user.id)
-                .order_by(desc(AIDialog.created_at))
-                .limit(5)
-            )
-            dialogs = list(reversed(result.scalars().all()))
-            history = []
-            for d in dialogs:
-                history.append({"role": "user", "content": d.question})
-                history.append({"role": "assistant", "content": d.answer})
-
-            response = await services.ai.answer_tax_question(
-                question,
-                {
-                    "entity_type": profile.entity_type.value if profile else None,
-                    "tax_regime": profile.tax_regime.value if profile else None,
-                    "has_employees": profile.has_employees if profile else None,
-                },
-                history=history,
-            )
-
-            # Save dialog & increment
-            session.add(AIDialog(user_id=user.id, question=question, answer=response.text, sources=response.sources))
-            await services.subscription.increment_ai_usage(user)
-            await session.commit()
-
-            # Show remaining for free users
-            is_active = services.subscription.is_active(sub)
-            footer = ""
-            if not is_active:
-                _, new_remaining = await services.subscription.can_use_ai(user, sub)
-                if new_remaining <= 2:
-                    footer = f"\n\n💬 Осталось запросов: *{new_remaining}*"
-
-        await message.answer(response.text + footer, reply_markup=ai_consult_keyboard(), parse_mode="Markdown")
+        await message.answer(response_text + footer, reply_markup=ai_consult_keyboard(), parse_mode="Markdown")
 
     async def prompt_finance_input(message: Message, state: FSMContext, record_kind: str, *, edit: bool = False) -> None:
         if record_kind == "income":
@@ -630,80 +561,57 @@ def build_router() -> Router:
         await state.set_state(RegimeSelectionStates.activity)
         await message.answer("🔍 *Подбор режима* (1/5)\n\nЧем занимаешься?", reply_markup=regime_activity_keyboard(), parse_mode="Markdown")
 
-    async def handle_tax_calculation(message: Message, raw_query: str, *, force: bool = False) -> bool:
-        if not force and not TaxQueryParser.looks_like_calculation_request(raw_query):
-            return False
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=message.from_user.id, username=message.from_user.username,
-                first_name=message.from_user.first_name, timezone="Europe/Moscow",
-            )
-            profile = await services.onboarding.load_profile(str(user.id))
-            parsed = TaxQueryParser.parse(
-                raw_query,
-                {
-                    "entity_type": profile.entity_type.value if profile else None,
-                    "tax_regime": profile.tax_regime.value if profile else None,
-                    "has_employees": profile.has_employees if profile else False,
-                },
-            )
-            if parsed.question:
-                await message.answer(parsed.question)
-                return True
-            if parsed.request is None:
-                return False
-            result = services.tax.calculate(parsed.request)
-            await message.answer(result.render(), reply_markup=main_menu_keyboard())
+    async def handle_tax_calculation(message: Message, raw_query: str) -> bool:
+        user, profile = await load_profile(message.from_user)
+        profile_ctx = {}
+        if profile:
+            profile_ctx = {
+                "entity_type": profile.get("entity_type"),
+                "tax_regime": profile.get("tax_regime"),
+                "has_employees": profile.get("has_employees", False),
+            }
+        result = await api.parse_tax_query(raw_query, profile_ctx)
+        if result.get("question"):
+            await message.answer(result["question"])
             return True
+        if result.get("text"):
+            await message.answer(result["text"], reply_markup=main_menu_keyboard())
+            return True
+        return False
 
-    async def check_ai_limit(message: Message, user, sub) -> bool:
+    async def check_ai_limit(message: Message, user_id: str) -> bool:
         """Returns True if user can proceed, False if paywall should be shown."""
-        async with SessionFactory() as session:
-            services = build_services(session)
-            can_use, remaining = await services.subscription.can_use_ai(user, sub)
-            if not can_use:
-                prices = {
-                    "basic": settings.stars_price_basic,
-                    "pro": settings.stars_price_pro,
-                    "annual": settings.stars_price_annual,
-                }
-                await message.answer(paywall_text(0), reply_markup=subscription_keyboard(prices), parse_mode="Markdown")
-                return False
-            if remaining <= 1 and not services.subscription.is_active(sub):
-                # Warn about last request
-                await message.answer(f"⚠️ Это последний бесплатный AI-запрос сегодня.", parse_mode="Markdown")
-            return True
+        sub_data = await api.subscription_status(user_id)
+        can_use = sub_data.get("can_use_ai", True)
+        if not can_use:
+            prices = {
+                "basic": settings.stars_price_basic,
+                "pro": settings.stars_price_pro,
+                "annual": settings.stars_price_annual,
+            }
+            await message.answer(paywall_text(0), reply_markup=subscription_keyboard(prices), parse_mode="Markdown")
+            return False
+        remaining = sub_data.get("remaining_ai_requests", 0)
+        if remaining <= 1 and not sub_data.get("is_active"):
+            await message.answer("⚠️ Это последний бесплатный AI-запрос сегодня.", parse_mode="Markdown")
+        return True
 
     # ── Handlers ──
 
     @router.message(CommandStart())
     async def start_handler(message: Message, state: FSMContext) -> None:
-        # Handle referral deep links
         args = message.text.split(maxsplit=1)
         ref_id = None
         if len(args) > 1 and args[1].startswith("ref_"):
             ref_id = args[1][4:]
 
-        _, profile = await load_profile(message.from_user)
+        user, profile = await load_profile(message.from_user)
 
-        if ref_id:
-            async with SessionFactory() as session:
-                services = build_services(session)
-                user = await services.onboarding.ensure_user(
-                    telegram_id=message.from_user.id, username=message.from_user.username,
-                    first_name=message.from_user.first_name, timezone="Europe/Moscow",
-                )
-                if user.referred_by is None and str(message.from_user.id) != ref_id:
-                    user.referred_by = ref_id
-                    # Give bonus to referrer
-                    from sqlalchemy import select
-                    from shared.db.models import User
-                    result = await session.execute(select(User).where(User.telegram_id == int(ref_id)))
-                    referrer = result.scalar_one_or_none()
-                    if referrer:
-                        referrer.referral_bonus_requests += 3
-                    await session.commit()
+        if ref_id and str(message.from_user.id) != ref_id:
+            try:
+                await api.process_referral(user["user_id"], ref_id)
+            except Exception:
+                logger.warning("Referral processing failed for ref_id=%s", ref_id)
 
         if profile is not None:
             await state.clear()
@@ -764,11 +672,11 @@ def build_router() -> Router:
 
     @router.message(Command("income"))
     async def income_list_handler(message: Message) -> None:
-        await show_record_list(message, FinanceRecordType.INCOME)
+        await show_record_list(message, "income")
 
     @router.message(Command("expenses"))
     async def expense_list_handler(message: Message) -> None:
-        await show_record_list(message, FinanceRecordType.EXPENSE)
+        await show_record_list(message, "expense")
 
     @router.message(Command("report"))
     async def report_handler(message: Message) -> None:
@@ -794,7 +702,7 @@ def build_router() -> Router:
         if not payload:
             await message.answer("Пришли запрос так: /calc усн 6 доход 500000", parse_mode="Markdown")
             return
-        handled = await handle_tax_calculation(message, payload, force=True)
+        handled = await handle_tax_calculation(message, payload)
         if not handled:
             await message.answer("Не понял режим или сумму.\nПример: /calc самозанятый доход 120к от физлиц", parse_mode="Markdown")
 
@@ -811,18 +719,12 @@ def build_router() -> Router:
         if not payload:
             await prompt_finance_input(message, state, "income")
             return
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=message.from_user.id, username=message.from_user.username,
-                first_name=message.from_user.first_name, timezone="Europe/Moscow",
-            )
-            try:
-                await services.finance.add_from_text(str(user.id), _normalize_finance_text(payload, "income"))
-            except ValueError:
-                await message.answer("Не понял формат. Пример: _получил 50к от клиента_", parse_mode="Markdown")
-                return
-            await session.commit()
+        user, _ = await load_profile(message.from_user)
+        try:
+            await api.add_from_text(user["user_id"], _normalize_finance_text(payload, "income"))
+        except Exception:
+            await message.answer("Не понял формат. Пример: _получил 50к от клиента_", parse_mode="Markdown")
+            return
         await state.clear()
         await message.answer("✅ Доход сохранён.", reply_markup=finance_shortcuts_keyboard(), parse_mode="Markdown")
 
@@ -833,18 +735,12 @@ def build_router() -> Router:
         if not payload:
             await prompt_finance_input(message, state, "expense")
             return
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=message.from_user.id, username=message.from_user.username,
-                first_name=message.from_user.first_name, timezone="Europe/Moscow",
-            )
-            try:
-                await services.finance.add_from_text(str(user.id), _normalize_finance_text(payload, "expense"))
-            except ValueError:
-                await message.answer("Не понял формат. Пример: _заплатил 12к за рекламу_", parse_mode="Markdown")
-                return
-            await session.commit()
+        user, _ = await load_profile(message.from_user)
+        try:
+            await api.add_from_text(user["user_id"], _normalize_finance_text(payload, "expense"))
+        except Exception:
+            await message.answer("Не понял формат. Пример: _заплатил 12к за рекламу_", parse_mode="Markdown")
+            return
         await state.clear()
         await message.answer("✅ Расход сохранён.", reply_markup=finance_shortcuts_keyboard(), parse_mode="Markdown")
 
@@ -859,16 +755,8 @@ def build_router() -> Router:
 
     @router.message(F.text == "🗑 Новый диалог")
     async def clear_ai_history_handler(message: Message, state: FSMContext) -> None:
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=message.from_user.id, username=message.from_user.username,
-                first_name=message.from_user.first_name, timezone="Europe/Moscow",
-            )
-            from sqlalchemy import delete
-            from shared.db.models import AIDialog
-            await session.execute(delete(AIDialog).where(AIDialog.user_id == user.id))
-            await session.commit()
+        user, _ = await load_profile(message.from_user)
+        await api.clear_ai_history(user["user_id"])
         await state.set_state(AIConsultStates.chatting)
         await message.answer("🗑 История очищена. Начинаем с чистого листа!\n\nЗадай вопрос 👇", reply_markup=ai_consult_reply_keyboard(), parse_mode="Markdown")
 
@@ -883,10 +771,10 @@ def build_router() -> Router:
         if message.text not in ENTITY_TYPE_MAP:
             await message.answer("Выбери из кнопок 👇")
             return
-        entity_type = ENTITY_TYPE_MAP[message.text]
-        await state.update_data(entity_type=entity_type.value)
-        if entity_type == EntityType.SELF_EMPLOYED:
-            await state.update_data(tax_regime=TaxRegime.NPD.value, has_employees=False)
+        entity_type_str = ENTITY_TYPE_MAP[message.text]
+        await state.update_data(entity_type=entity_type_str)
+        if entity_type_str == "self_employed":
+            await state.update_data(tax_regime="npd", has_employees=False)
             await state.set_state(OnboardingStates.region)
             await message.answer("📍 *Шаг 2/3.* Укажи регион:", parse_mode="Markdown")
             return
@@ -898,7 +786,7 @@ def build_router() -> Router:
         if message.text not in TAX_REGIME_MAP:
             await message.answer("Выбери режим из кнопок 👇")
             return
-        await state.update_data(tax_regime=TAX_REGIME_MAP[message.text].value)
+        await state.update_data(tax_regime=TAX_REGIME_MAP[message.text])
         await state.set_state(OnboardingStates.has_employees)
         await message.answer("👥 *Шаг 3/4.* Есть сотрудники?", reply_markup=yes_no_keyboard(), parse_mode="Markdown")
 
@@ -922,19 +810,18 @@ def build_router() -> Router:
             await message.answer("Что-то пошло не так. Начни заново: /start")
             return
 
-        # Defaults for shortened onboarding
         if not tax_regime_val:
-            tax_regime_val = TaxRegime.NPD.value
+            tax_regime_val = "npd"
 
-        draft = OnboardingDraft(
-            entity_type=EntityType(entity_type_val),
-            tax_regime=TaxRegime(tax_regime_val),
-            has_employees=payload.get("has_employees", False),
-            marketplaces_enabled=False,
-            industry=None,
-            region=message.text.strip(),
-            timezone="Europe/Moscow",
-            reminder_settings={
+        draft = {
+            "entity_type": entity_type_val,
+            "tax_regime": tax_regime_val,
+            "has_employees": payload.get("has_employees", False),
+            "marketplaces_enabled": False,
+            "industry": None,
+            "region": message.text.strip(),
+            "timezone": "Europe/Moscow",
+            "reminder_settings": {
                 "notify_taxes": True,
                 "notify_reporting": True,
                 "notify_documents": True,
@@ -942,29 +829,10 @@ def build_router() -> Router:
                 "offset_days": [3, 1],
                 "planning_entity": bool(payload.get("planning_entity")),
             },
-        )
+        }
 
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=message.from_user.id, username=message.from_user.username,
-                first_name=message.from_user.first_name, timezone=draft.timezone,
-            )
-            await services.onboarding.save_profile(str(user.id), draft)
-            profile_context = ProfileContext(
-                entity_type=draft.entity_type, tax_regime=draft.tax_regime,
-                has_employees=draft.has_employees, marketplaces_enabled=draft.marketplaces_enabled,
-                region=draft.region, industry=draft.industry, reminder_offsets=[3, 1],
-            )
-            await sync_profile_events_and_reminders(
-                session,
-                services,
-                str(user.id),
-                profile_context,
-                draft.reminder_settings,
-                draft.timezone,
-            )
-            await session.commit()
+        user, _ = await load_profile(message.from_user)
+        await api.save_profile(user["user_id"], draft)
 
         await state.clear()
         await message.answer(onboarding_complete_text(), reply_markup=main_menu_keyboard(), parse_mode="Markdown")
@@ -998,18 +866,12 @@ def build_router() -> Router:
         if not source_text:
             await message.answer("Напиши сумму. Пример: _получил 50к от клиента_", parse_mode="Markdown")
             return
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=message.from_user.id, username=message.from_user.username,
-                first_name=message.from_user.first_name, timezone="Europe/Moscow",
-            )
-            try:
-                await services.finance.add_from_text(str(user.id), source_text)
-            except ValueError:
-                await message.answer("Не понял сумму. Пример: _получил 50к от клиента_", parse_mode="Markdown")
-                return
-            await session.commit()
+        user, _ = await load_profile(message.from_user)
+        try:
+            await api.add_from_text(user["user_id"], source_text)
+        except Exception:
+            await message.answer("Не понял сумму. Пример: _получил 50к от клиента_", parse_mode="Markdown")
+            return
         await state.clear()
         await message.answer("✅ Доход сохранён.", reply_markup=finance_shortcuts_keyboard(), parse_mode="Markdown")
 
@@ -1019,18 +881,12 @@ def build_router() -> Router:
         if not source_text:
             await message.answer("Напиши сумму. Пример: _заплатил 12к за рекламу_", parse_mode="Markdown")
             return
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=message.from_user.id, username=message.from_user.username,
-                first_name=message.from_user.first_name, timezone="Europe/Moscow",
-            )
-            try:
-                await services.finance.add_from_text(str(user.id), source_text)
-            except ValueError:
-                await message.answer("Не понял сумму. Пример: _заплатил 12к за рекламу_", parse_mode="Markdown")
-                return
-            await session.commit()
+        user, _ = await load_profile(message.from_user)
+        try:
+            await api.add_from_text(user["user_id"], source_text)
+        except Exception:
+            await message.answer("Не понял сумму. Пример: _заплатил 12к за рекламу_", parse_mode="Markdown")
+            return
         await state.clear()
         await message.answer("✅ Расход сохранён.", reply_markup=finance_shortcuts_keyboard(), parse_mode="Markdown")
 
@@ -1047,7 +903,7 @@ def build_router() -> Router:
 
     @router.message(RegimeSelectionStates.monthly_income)
     async def regime_income_handler(message: Message, state: FSMContext) -> None:
-        amount = TaxQueryParser.parse_amount(message.text or "")
+        amount = _parse_amount(message.text or "")
         if amount is None:
             await message.answer("Напиши сумму числом. Например: 300000")
             return
@@ -1082,15 +938,14 @@ def build_router() -> Router:
             await state.clear()
             await message.answer("Не удалось собрать данные. Начни заново: /regime")
             return
-        async with SessionFactory() as session:
-            services = build_services(session)
-            result = services.tax.compare_regimes(
-                activity=payload["activity"], monthly_income=monthly_income,
-                has_employees=payload["has_employees"], counterparties=payload["counterparties"],
-                region=message.text.strip(),
-            )
+        result = await api.compare_regimes(
+            activity=payload["activity"], monthly_income=str(monthly_income),
+            has_employees=payload["has_employees"], counterparties=payload["counterparties"],
+            region=message.text.strip(),
+        )
         await state.clear()
-        await message.answer(result.render(), reply_markup=main_menu_keyboard())
+        text = result.get("text", "Не удалось сравнить режимы.")
+        await message.answer(text, reply_markup=main_menu_keyboard())
 
     # ── Subscription callbacks ──
 
@@ -1101,27 +956,23 @@ def build_router() -> Router:
             return
 
         if callback_data.action == "buy":
-            plan_map = {
-                "basic": SubscriptionPlan.BASIC,
-                "pro": SubscriptionPlan.PRO,
-                "annual": SubscriptionPlan.ANNUAL,
-            }
-            plan = plan_map.get(callback_data.plan)
-            if plan is None:
+            plan_key = callback_data.plan
+            if plan_key not in PLAN_DETAILS:
                 await query.answer("Неизвестный тариф", show_alert=True)
                 return
 
-            details = PLAN_DETAILS[plan]
-            price = settings.stars_price_basic
-            if plan == SubscriptionPlan.PRO:
-                price = settings.stars_price_pro
-            elif plan == SubscriptionPlan.ANNUAL:
-                price = settings.stars_price_annual
+            details = PLAN_DETAILS[plan_key]
+            price_map = {
+                "basic": settings.stars_price_basic,
+                "pro": settings.stars_price_pro,
+                "annual": settings.stars_price_annual,
+            }
+            price = price_map.get(plan_key, settings.stars_price_basic)
 
             await query.message.answer_invoice(
                 title=f"Подписка «{details['label']}»",
                 description=f"AI без лимитов на {details['days']} дней",
-                payload=f"sub_{callback_data.plan}",
+                payload=f"sub_{plan_key}",
                 currency="XTR",
                 prices=[LabeledPrice(label=f"Подписка {details['label']}", amount=price)],
             )
@@ -1146,36 +997,36 @@ def build_router() -> Router:
         payment = message.successful_payment
         payload = payment.invoice_payload
 
-        plan_map = {
-            "sub_basic": SubscriptionPlan.BASIC,
-            "sub_pro": SubscriptionPlan.PRO,
-            "sub_annual": SubscriptionPlan.ANNUAL,
+        plan_key_map = {
+            "sub_basic": "basic",
+            "sub_pro": "pro",
+            "sub_annual": "annual",
         }
-        plan = plan_map.get(payload)
-        if plan is None:
+        plan_key = plan_key_map.get(payload)
+        if plan_key is None:
             await message.answer("Оплата получена, но тариф не распознан. Напиши в поддержку.")
             return
 
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=message.from_user.id, username=message.from_user.username,
-                first_name=message.from_user.first_name, timezone="Europe/Moscow",
-            )
-            if await services.subscription.payment_exists(payment.telegram_payment_charge_id):
-                await message.answer("Оплата уже обработана. Если доступ не появился — напиши в поддержку.")
-                return
-            sub = await services.subscription.activate(str(user.id), plan)
-            await services.subscription.record_payment(
-                str(user.id), plan, payment.total_amount,
-                payment.telegram_payment_charge_id,
-            )
-            await session.commit()
+        user, _ = await load_profile(message.from_user)
+        result = await api.process_payment(
+            user_id=user["user_id"],
+            plan=plan_key,
+            amount=payment.total_amount,
+            charge_id=payment.telegram_payment_charge_id,
+        )
+        if result.get("already_processed"):
+            await message.answer("Оплата уже обработана. Если доступ не появился — напиши в поддержку.")
+            return
 
-        details = PLAN_DETAILS[plan]
-        expires = sub.expires_at.strftime("%d.%m.%Y") if sub.expires_at else "—"
+        details = PLAN_DETAILS.get(plan_key, {})
+        expires = result.get("expires_at", "—")
+        if expires and expires != "—":
+            try:
+                expires = datetime.fromisoformat(expires).strftime("%d.%m.%Y")
+            except (ValueError, TypeError):
+                pass
         await message.answer(
-            payment_success_text(details["label"], expires),
+            payment_success_text(details.get("label", plan_key), expires),
             reply_markup=main_menu_keyboard(),
             parse_mode="Markdown",
         )
@@ -1200,8 +1051,8 @@ def build_router() -> Router:
             "laws": lambda: show_laws(message, query.from_user, edit=True),
             "finance": lambda: show_finance(message, query.from_user, edit=True),
             "balance": lambda: show_balance(message, query.from_user, edit=True),
-            "income_list": lambda: show_record_list(message, FinanceRecordType.INCOME, query.from_user, edit=True),
-            "expense_list": lambda: show_record_list(message, FinanceRecordType.EXPENSE, query.from_user, edit=True),
+            "income_list": lambda: show_record_list(message, "income", query.from_user, edit=True),
+            "expense_list": lambda: show_record_list(message, "expense", query.from_user, edit=True),
             "income_prompt": lambda: prompt_finance_input(message, state, "income", edit=True),
             "expense_prompt": lambda: prompt_finance_input(message, state, "expense", edit=True),
             "pick_regime": lambda: start_regime_picker(message, state),
@@ -1221,16 +1072,8 @@ def build_router() -> Router:
 
         # Clear AI history
         if target == "ai_clear_history":
-            async with SessionFactory() as session:
-                services = build_services(session)
-                user = await services.onboarding.ensure_user(
-                    telegram_id=query.from_user.id, username=query.from_user.username,
-                    first_name=query.from_user.first_name, timezone="Europe/Moscow",
-                )
-                from sqlalchemy import delete
-                from shared.db.models import AIDialog
-                await session.execute(delete(AIDialog).where(AIDialog.user_id == user.id))
-                await session.commit()
+            user, _ = await load_profile(query.from_user)
+            await api.clear_ai_history(user["user_id"])
             await respond(message, "🗑 История очищена!\n\nЗадай новый вопрос 👇", reply_markup=ai_consult_keyboard(), edit=True)
             await query.answer("История очищена")
             return
@@ -1249,14 +1092,8 @@ def build_router() -> Router:
             await query.answer()
             return
         if target == "cancel_subscription":
-            async with SessionFactory() as session:
-                services = build_services(session)
-                user = await services.onboarding.ensure_user(
-                    telegram_id=query.from_user.id, username=query.from_user.username,
-                    first_name=query.from_user.first_name, timezone="Europe/Moscow",
-                )
-                await services.subscription.cancel(str(user.id))
-                await session.commit()
+            user, _ = await load_profile(query.from_user)
+            await api.cancel_subscription(user["user_id"])
             await respond(
                 message,
                 "🚫 Подписка отменена. Доступ сохранится до конца оплаченного периода.",
@@ -1279,15 +1116,11 @@ def build_router() -> Router:
         if query.message is None:
             await query.answer()
             return
-        async with SessionFactory() as session:
-            services = build_services(session)
-            if callback_data.action == "snooze":
-                await services.calendar.calendar_repo.snooze(callback_data.event_id, utcnow() + timedelta(days=1))
-                await query.message.edit_text("⏰ Отложено на 1 день.", reply_markup=section_shortcuts_keyboard())
-            else:
-                await services.calendar.calendar_repo.mark_completed(callback_data.event_id, utcnow())
-                await query.message.edit_text("✅ Выполнено!", reply_markup=section_shortcuts_keyboard())
-            await session.commit()
+        await api.event_action(callback_data.event_id, callback_data.action)
+        if callback_data.action == "snooze":
+            await query.message.edit_text("⏰ Отложено на 1 день.", reply_markup=section_shortcuts_keyboard())
+        else:
+            await query.message.edit_text("✅ Выполнено!", reply_markup=section_shortcuts_keyboard())
         await query.answer()
 
     @router.callback_query(PageCallback.filter())
@@ -1317,99 +1150,27 @@ def build_router() -> Router:
 
         # Try finance first
         if any(hint in normalized for hint in finance_hints) and not any(hint in normalized for hint in tax_hints):
-            async with SessionFactory() as session:
-                services = build_services(session)
-                user = await services.onboarding.ensure_user(
-                    telegram_id=message.from_user.id, username=message.from_user.username,
-                    first_name=message.from_user.first_name, timezone="Europe/Moscow",
-                )
-                try:
-                    record = await services.finance.add_from_text(str(user.id), raw_text)
-                except ValueError:
-                    record = None
-                if record is not None:
-                    await session.commit()
-                    label = _category_label(record.record_type, record.category)
-                    kind = "доход" if record.record_type == FinanceRecordType.INCOME else "расход"
+            user, _ = await load_profile(message.from_user)
+            try:
+                result = await api.add_from_text(user["user_id"], raw_text)
+                if result and result.get("saved"):
+                    record_type = result.get("record_type", "income")
+                    label = _category_label(record_type, result.get("category", ""))
+                    kind = "доход" if record_type == "income" else "расход"
                     await message.answer(
-                        f"✅ Сохранил {kind}: *{record.amount}* ₽, категория _{label}_",
+                        f"✅ Сохранил {kind}: *{result.get('amount', 0)}* ₽, категория _{label}_",
                         reply_markup=finance_shortcuts_keyboard(),
                         parse_mode="Markdown",
                     )
                     return
-
-        # Try document templates
-        async with SessionFactory() as session:
-            services = build_services(session)
-            template = services.templates.match_template(raw_text)
-            if template is not None:
-                await message.answer(template, reply_markup=main_menu_keyboard())
-                return
+            except Exception:
+                pass
 
         # Try tax calculation
         if await handle_tax_calculation(message, raw_text):
             return
 
-        # AI question — check limits first
-        async with SessionFactory() as session:
-            services = build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=message.from_user.id, username=message.from_user.username,
-                first_name=message.from_user.first_name, timezone="Europe/Moscow",
-            )
-            sub = await services.subscription.get_subscription(str(user.id))
-            can_use, remaining = await services.subscription.can_use_ai(user, sub)
-
-            if not can_use:
-                prices = {
-                    "basic": settings.stars_price_basic,
-                    "pro": settings.stars_price_pro,
-                    "annual": settings.stars_price_annual,
-                }
-                await message.answer(paywall_text(0), reply_markup=subscription_keyboard(prices), parse_mode="Markdown")
-                return
-
-            if not await allow_ai_request(settings, str(user.id)):
-                await message.answer("⚠️ Слишком много запросов. Подожди минуту и повтори.", parse_mode="Markdown")
-                return
-
-            # Show typing indicator
-            await message.bot.send_chat_action(message.chat.id, "typing")
-
-            profile = await services.onboarding.load_profile(str(user.id))
-
-            # Get chat history for context
-            from sqlalchemy import select, desc
-            from shared.db.models import AIDialog
-            result = await session.execute(
-                select(AIDialog)
-                .where(AIDialog.user_id == user.id)
-                .order_by(desc(AIDialog.created_at))
-                .limit(5)
-            )
-            dialogs = list(reversed(result.scalars().all()))
-            history = []
-            for d in dialogs:
-                history.append({"role": "user", "content": d.question})
-                history.append({"role": "assistant", "content": d.answer})
-
-            response = await services.ai.answer_tax_question(
-                raw_text,
-                {
-                    "entity_type": profile.entity_type.value if profile else None,
-                    "tax_regime": profile.tax_regime.value if profile else None,
-                    "has_employees": profile.has_employees if profile else None,
-                },
-                history=history,
-            )
-
-            # Save dialog
-            session.add(AIDialog(user_id=user.id, question=raw_text, answer=response.text, sources=response.sources))
-
-            # Increment usage
-            await services.subscription.increment_ai_usage(user)
-            await session.commit()
-
-        await message.answer(response.text, reply_markup=main_menu_keyboard(), parse_mode="Markdown")
+        # AI question
+        await do_ai_answer(message, raw_text)
 
     return router

@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     api_port: int = Field(default=8080, alias="API_PORT")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
     timezone: str = Field(default="Europe/Moscow", alias="TIMEZONE")
+    backend_url: str = Field(default="http://backend:8080", alias="BACKEND_URL")
 
     telegram_bot_token: str = Field(default="", alias="TELEGRAM_BOT_TOKEN")
     telegram_delivery_mode: str = Field(default="webhook", alias="TELEGRAM_DELIVERY_MODE")
