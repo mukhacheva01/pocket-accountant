@@ -1,7 +1,7 @@
 """Shared helpers for bot handler tests."""
 
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message, User as TelegramUser
@@ -10,6 +10,8 @@ from shared.db.enums import (
     EntityType,
     TaxRegime,
 )
+
+MODULE = "bot.handlers"
 
 
 def make_user(
@@ -130,3 +132,86 @@ def make_services():
     svc.templates.match_template = MagicMock(return_value=None)
     svc.tax = MagicMock()
     return svc
+
+
+def make_mock_client():
+    """Create a mock BackendClient with all methods returning sensible defaults."""
+    client = AsyncMock()
+    client.ensure_user = AsyncMock(return_value={"user_id": "u1", "telegram_id": 123})
+    client.get_profile = AsyncMock(return_value={"profile": {
+        "entity_type": "ip",
+        "tax_regime": "usn_income",
+        "has_employees": False,
+        "marketplaces_enabled": False,
+        "region": "Москва",
+        "industry": None,
+        "reminder_settings": {
+            "notify_taxes": True,
+            "notify_reporting": True,
+            "notify_documents": True,
+            "notify_laws": True,
+            "offset_days": [3, 1],
+        },
+    }})
+    client.complete_onboarding = AsyncMock(return_value={})
+    client.complete_onboarding_full = AsyncMock(return_value={})
+    client.touch = AsyncMock(return_value={})
+    client.set_referral = AsyncMock(return_value={})
+    client.get_referral_info = AsyncMock(return_value={"referral_count": 0, "bonus_requests": 0})
+    client.upcoming_events = AsyncMock(return_value={"events": []})
+    client.overdue_events = AsyncMock(return_value={"events": []})
+    client.event_action = AsyncMock(return_value={})
+    client.add_finance_record = AsyncMock(return_value={"record": {
+        "record_type": "income", "amount": "50000", "category": "services",
+    }})
+    client.add_finance_text = AsyncMock(return_value={"record": {
+        "record_type": "income", "amount": "50000", "category": "services",
+    }})
+    client.get_finance_report = AsyncMock(return_value={
+        "totals": {"income": 100000, "expense": 50000},
+        "profit": 50000,
+        "top_expenses": [("marketing", 20000)],
+    })
+    client.get_full_report = AsyncMock(return_value={
+        "totals": {"income": 100000, "expense": 50000},
+        "profit": 50000,
+        "top_expenses": [("marketing", 20000)],
+    })
+    client.get_balance = AsyncMock(return_value={"income": 100000, "expense": 50000, "balance": 50000})
+    client.get_finance_records = AsyncMock(return_value={"records": []})
+    client.ask_ai = AsyncMock(return_value={"answer": "AI answer", "sources": []})
+    client.ask_ai_with_history = AsyncMock(return_value={"answer": "AI answer", "sources": [], "remaining_ai_requests": 2})
+    client.clear_ai_history = AsyncMock(return_value={})
+    client.subscription_status = AsyncMock(return_value={
+        "is_active": False, "remaining_ai_requests": 3, "can_use_ai": True,
+    })
+    client.activate_subscription = AsyncMock(return_value={"expires_at": "2026-08-01"})
+    client.cancel_subscription = AsyncMock(return_value={})
+    client.record_payment = AsyncMock(return_value={})
+    client.calculate_tax = AsyncMock(return_value={"rendered": "Расчёт: ..."})
+    client.parse_tax_query = AsyncMock(return_value={"rendered": "Расчёт: ..."})
+    client.compare_regimes = AsyncMock(return_value={"rendered": "Рекомендация: УСН 6%"})
+    client.upcoming_documents = AsyncMock(return_value={"documents": []})
+    client.law_updates = AsyncMock(return_value={"updates": []})
+    client.match_template = AsyncMock(return_value={"template": None})
+    return client
+
+
+def patch_handler_deps(mock_client=None):
+    """Patch BackendClient and get_settings for handler tests.
+
+    Returns (client_patch, gs_patch, mock_client).
+    Usage:
+        cl_p, gs_p, mock_client = patch_handler_deps()
+        with cl_p, gs_p:
+            router = build_router()
+    """
+    mc = mock_client or make_mock_client()
+    cl_patch = patch(f"{MODULE}.BackendClient", return_value=mc)
+    gs_patch = patch(f"{MODULE}.get_settings", return_value=MagicMock(
+        stars_price_basic=150,
+        stars_price_pro=400,
+        stars_price_annual=3500,
+        backend_base_url="http://test:8080",
+    ))
+    return cl_patch, gs_patch, mc

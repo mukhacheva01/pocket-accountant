@@ -30,6 +30,25 @@ async def upcoming_events(user_id: str, days: int = 7, services = Depends(get_se
     return {"events": result}
 
 
+@router.get("/{user_id}/overdue")
+async def overdue_events(user_id: str, services=Depends(get_services_dep)):
+    from datetime import date as date_mod
+    events = await services.calendar.overdue(user_id)
+    overdue = [item for item in events if item.due_date < date_mod.today()]
+    result = []
+    for ue in overdue:
+        ce = ue.calendar_event
+        result.append({
+            "user_event_id": str(ue.id),
+            "title": ce.title if ce else "",
+            "description": ce.description if ce else "",
+            "category": ce.category.value if ce else "",
+            "due_date": ue.due_date.isoformat(),
+            "status": ue.status.value,
+        })
+    return {"events": result}
+
+
 @router.post("/{user_event_id}/action")
 async def event_action(
     user_event_id: str, req: EventActionRequest, services = Depends(get_services_dep),

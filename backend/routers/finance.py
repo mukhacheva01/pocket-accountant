@@ -50,9 +50,60 @@ async def add_record(
 
 
 @router.get("/{user_id}/report")
-async def get_report(user_id: str, days: int = 30, services = Depends(get_services_dep)):
+async def get_report(user_id: str, days: int = 30, services=Depends(get_services_dep)):
     balance = await services.finance.balance(user_id)
     return balance
+
+
+@router.get("/{user_id}/full-report")
+async def get_full_report(user_id: str, days: int = 30, services=Depends(get_services_dep)):
+    from datetime import timedelta
+    date_from = date.today() - timedelta(days=days)
+    date_to = date.today()
+    report = await services.finance.report(user_id, date_from, date_to)
+    return {
+        "income": str(report["totals"]["income"]),
+        "expense": str(report["totals"]["expense"]),
+        "profit": str(report["profit"]),
+        "top_expenses": [
+            {"category": cat, "amount": str(amt)}
+            for cat, amt in (report["top_expenses"] or [])
+        ],
+    }
+
+
+@router.get("/{user_id}/balance")
+async def get_balance(user_id: str, services=Depends(get_services_dep)):
+    balance = await services.finance.balance(user_id)
+    return {
+        "income": str(balance["income"]),
+        "expense": str(balance["expense"]),
+        "balance": str(balance["balance"]),
+    }
+
+
+class AddTextRequest(BaseModel):
+    source_text: str
+
+
+@router.post("/{user_id}/add-text")
+async def add_from_text(user_id: str, req: AddTextRequest, services=Depends(get_services_dep)):
+    from shared.db.session import SessionFactory
+    from backend.services.container import build_services
+
+    async with SessionFactory() as session:
+        svcs = build_services(session)
+        try:
+            record = await svcs.finance.add_from_text(user_id, req.source_text)
+        except ValueError:
+            return {"error": "parse_failed", "message": "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0440\u0430\u0437\u043e\u0431\u0440\u0430\u0442\u044c \u0442\u0435\u043a\u0441\u0442"}
+        await session.commit()
+        return {
+            "record_id": str(record.id),
+            "amount": str(record.amount),
+            "category": record.category,
+            "record_type": record.record_type.value,
+        }
 
 
 @router.get("/{user_id}/records")

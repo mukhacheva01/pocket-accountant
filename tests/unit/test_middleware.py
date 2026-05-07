@@ -1,7 +1,6 @@
 """Tests for bot.middleware."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
-
+from unittest.mock import AsyncMock, MagicMock
 
 from bot.middleware import ErrorHandlerMiddleware, UserInjectMiddleware
 
@@ -50,27 +49,22 @@ class TestErrorHandlerMiddleware:
         assert result is None
 
 
+def _make_mock_client():
+    client = AsyncMock()
+    client.ensure_user = AsyncMock(return_value={"user_id": "u1", "telegram_id": 123})
+    client.get_profile = AsyncMock(return_value={"profile": {"entity_type": "ip"}})
+    client.subscription_status = AsyncMock(return_value={"is_active": False})
+    client.touch = AsyncMock(return_value={})
+    return client
+
+
 class TestUserInjectMiddleware:
-    @patch("bot.middleware.SessionFactory")
-    @patch("bot.middleware.build_services")
-    async def test_injects_user_data(self, mock_build, mock_sf):
-        session = AsyncMock()
-        mock_sf.return_value.__aenter__ = AsyncMock(return_value=session)
-        mock_sf.return_value.__aexit__ = AsyncMock()
-        session.commit = AsyncMock()
-        session.add = MagicMock()
-
-        user = MagicMock()
-        user.id = "u1"
-        user.is_active = True
-        profile = MagicMock()
-        sub = MagicMock()
-
-        services = MagicMock()
-        services.onboarding.ensure_user = AsyncMock(return_value=user)
-        services.onboarding.load_profile = AsyncMock(return_value=profile)
-        services.subscription.get_subscription = AsyncMock(return_value=sub)
-        mock_build.return_value = services
+    async def test_injects_user_data(self):
+        mc = _make_mock_client()
+        profile_data = {"entity_type": "ip"}
+        mc.get_profile = AsyncMock(return_value={"profile": profile_data})
+        sub_data = {"is_active": True, "remaining_ai_requests": 3}
+        mc.subscription_status = AsyncMock(return_value=sub_data)
 
         from aiogram.types import Message
         actor = MagicMock()
@@ -82,31 +76,16 @@ class TestUserInjectMiddleware:
 
         handler = AsyncMock(return_value="ok")
         data = {"event_from_user": actor}
-        mw = UserInjectMiddleware()
+        mw = UserInjectMiddleware(client=mc)
         result = await mw(handler, event, data)
         assert result == "ok"
-        assert data["db_user"] == user
-        assert data["db_profile"] == profile
-        assert data["db_subscription"] == sub
-        assert user.last_command == "start"
+        assert data["db_user"] == {"user_id": "u1", "telegram_id": 123}
+        assert data["db_profile"] == profile_data
+        assert data["db_subscription"] == sub_data
+        mc.touch.assert_awaited()
 
-    @patch("bot.middleware.SessionFactory")
-    @patch("bot.middleware.build_services")
-    async def test_callback_event(self, mock_build, mock_sf):
-        session = AsyncMock()
-        mock_sf.return_value.__aenter__ = AsyncMock(return_value=session)
-        mock_sf.return_value.__aexit__ = AsyncMock()
-        session.commit = AsyncMock()
-        session.add = MagicMock()
-
-        user = MagicMock()
-        user.id = "u1"
-        user.is_active = True
-        services = MagicMock()
-        services.onboarding.ensure_user = AsyncMock(return_value=user)
-        services.onboarding.load_profile = AsyncMock(return_value=None)
-        services.subscription.get_subscription = AsyncMock(return_value=None)
-        mock_build.return_value = services
+    async def test_callback_event(self):
+        mc = _make_mock_client()
 
         from aiogram.types import CallbackQuery
         actor = MagicMock()
@@ -118,34 +97,20 @@ class TestUserInjectMiddleware:
 
         handler = AsyncMock(return_value="ok")
         data = {"event_from_user": actor}
-        mw = UserInjectMiddleware()
+        mw = UserInjectMiddleware(client=mc)
         await mw(handler, event, data)
+        mc.touch.assert_awaited()
 
     async def test_no_actor_passthrough(self):
         handler = AsyncMock(return_value="ok")
         event = MagicMock()
         data = {}
-        mw = UserInjectMiddleware()
+        mw = UserInjectMiddleware(client=_make_mock_client())
         result = await mw(handler, event, data)
         assert result == "ok"
 
-    @patch("bot.middleware.SessionFactory")
-    @patch("bot.middleware.build_services")
-    async def test_reactivates_inactive_user(self, mock_build, mock_sf):
-        session = AsyncMock()
-        mock_sf.return_value.__aenter__ = AsyncMock(return_value=session)
-        mock_sf.return_value.__aexit__ = AsyncMock()
-        session.commit = AsyncMock()
-        session.add = MagicMock()
-
-        user = MagicMock()
-        user.id = "u1"
-        user.is_active = False
-        services = MagicMock()
-        services.onboarding.ensure_user = AsyncMock(return_value=user)
-        services.onboarding.load_profile = AsyncMock(return_value=None)
-        services.subscription.get_subscription = AsyncMock(return_value=None)
-        mock_build.return_value = services
+    async def test_touch_called_with_command(self):
+        mc = _make_mock_client()
 
         from aiogram.types import Message
         actor = MagicMock()
@@ -153,11 +118,13 @@ class TestUserInjectMiddleware:
         actor.username = "alice"
         actor.first_name = "Alice"
         event = MagicMock(spec=Message)
-        event.text = "hello"
+        event.text = "/start"
 
         handler = AsyncMock(return_value="ok")
         data = {"event_from_user": actor}
-        mw = UserInjectMiddleware()
+        mw = UserInjectMiddleware(client=mc)
         await mw(handler, event, data)
-        assert user.is_active is True
-        assert user.reactivated_at is not None
+        mc.touch.assert_awaited_once()
+        call_kwargs = mc.touch.call_args[1]
+        assert call_kwargs["event_type"] == "command"
+        assert call_kwargs["payload"]["command"] == "start"

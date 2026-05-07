@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
+from typing import Any
 
 import httpx
 
@@ -53,10 +54,48 @@ class BackendClient:
             "region": region,
         })
 
+    async def complete_onboarding_full(
+        self, user_id: str, entity_type: str, tax_regime: str,
+        has_employees: bool, region: str, planning_entity: bool = False,
+    ) -> dict:
+        return await self._request("POST", f"/users/{user_id}/onboarding-full", json={
+            "entity_type": entity_type,
+            "tax_regime": tax_regime,
+            "has_employees": has_employees,
+            "region": region,
+            "planning_entity": planning_entity,
+        })
+
+    async def touch(
+        self, telegram_id: int, username: str | None = None,
+        first_name: str | None = None, event_type: str = "message",
+        payload: dict[str, Any] | None = None,
+    ) -> dict:
+        return await self._request("POST", "/users/touch", json={
+            "telegram_id": telegram_id,
+            "username": username,
+            "first_name": first_name,
+            "event_type": event_type,
+            "payload": payload or {},
+        })
+
+    async def set_referral(self, referrer_telegram_id: str, user_telegram_id: int) -> dict:
+        user = await self.ensure_user(user_telegram_id, None, None)
+        return await self._request("POST", f"/users/{user['user_id']}/set-referral", json={
+            "referrer_telegram_id": referrer_telegram_id,
+            "user_telegram_id": user_telegram_id,
+        })
+
+    async def get_referral_info(self, user_id: str, telegram_id: int) -> dict:
+        return await self._request("GET", f"/users/{user_id}/referral-info", params={"telegram_id": telegram_id})
+
     # ── Events ──
 
     async def upcoming_events(self, user_id: str, days: int = 7) -> dict:
         return await self._request("GET", f"/events/{user_id}/upcoming", params={"days": days})
+
+    async def overdue_events(self, user_id: str) -> dict:
+        return await self._request("GET", f"/events/{user_id}/overdue")
 
     async def event_action(self, user_event_id: str, action: str) -> dict:
         return await self._request("POST", f"/events/{user_event_id}/action", json={"action": action})
@@ -69,8 +108,19 @@ class BackendClient:
             "record_type": record_type,
         })
 
+    async def add_finance_text(self, user_id: str, source_text: str) -> dict:
+        return await self._request("POST", f"/finance/{user_id}/add-text", json={
+            "source_text": source_text,
+        })
+
     async def get_finance_report(self, user_id: str, days: int = 30) -> dict:
         return await self._request("GET", f"/finance/{user_id}/report", params={"days": days})
+
+    async def get_full_report(self, user_id: str, days: int = 30) -> dict:
+        return await self._request("GET", f"/finance/{user_id}/full-report", params={"days": days})
+
+    async def get_balance(self, user_id: str) -> dict:
+        return await self._request("GET", f"/finance/{user_id}/balance")
 
     async def get_finance_records(self, user_id: str, record_type: str = "all", limit: int = 20) -> dict:
         return await self._request("GET", f"/finance/{user_id}/records", params={
@@ -86,6 +136,14 @@ class BackendClient:
             "history": history or [],
         })
 
+    async def ask_ai_with_history(self, user_id: str, question: str) -> dict:
+        return await self._request("POST", f"/ai/{user_id}/ask", json={
+            "question": question,
+        })
+
+    async def clear_ai_history(self, user_id: str) -> dict:
+        return await self._request("DELETE", f"/ai/{user_id}/history")
+
     # ── Subscription ──
 
     async def subscription_status(self, user_id: str) -> dict:
@@ -93,6 +151,16 @@ class BackendClient:
 
     async def activate_subscription(self, user_id: str, plan: str) -> dict:
         return await self._request("POST", f"/subscription/{user_id}/activate", params={"plan": plan})
+
+    async def cancel_subscription(self, user_id: str) -> dict:
+        return await self._request("POST", f"/subscription/{user_id}/cancel")
+
+    async def record_payment(self, user_id: str, plan: str, stars: int, telegram_payment_id: str) -> dict:
+        return await self._request("POST", f"/subscription/{user_id}/record-payment", json={
+            "plan": plan,
+            "stars": stars,
+            "telegram_payment_id": telegram_payment_id,
+        })
 
     # ── Tax ──
 
@@ -111,3 +179,31 @@ class BackendClient:
             "query": query,
             "profile": profile or {},
         })
+
+    async def compare_regimes(
+        self, activity: str, monthly_income: Decimal,
+        has_employees: bool = False, counterparties: str = "mixed",
+        region: str = "Москва",
+    ) -> dict:
+        return await self._request("POST", "/tax/compare", json={
+            "activity": activity,
+            "monthly_income": str(monthly_income),
+            "has_employees": has_employees,
+            "counterparties": counterparties,
+            "region": region,
+        })
+
+    # ── Documents ──
+
+    async def upcoming_documents(self, user_id: str) -> dict:
+        return await self._request("GET", f"/documents/{user_id}/upcoming")
+
+    # ── Laws ──
+
+    async def law_updates(self, user_id: str, min_importance: int = 70) -> dict:
+        return await self._request("GET", f"/laws/{user_id}/updates", params={"min_importance": min_importance})
+
+    # ── Templates ──
+
+    async def match_template(self, text: str) -> dict:
+        return await self._request("POST", "/templates/match", json={"text": text})
