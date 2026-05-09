@@ -11,7 +11,7 @@ from tests.unit.bot_helpers import (
 )
 
 
-MODULE = "bot.handlers"
+MODULE = "bot.handlers.helpers"
 
 
 def _patch_deps(services=None):

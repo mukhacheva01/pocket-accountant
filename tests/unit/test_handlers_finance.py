@@ -6,7 +6,7 @@ from bot.handlers import build_router
 from tests.unit.bot_helpers import make_message, make_state, make_services
 
 
-MODULE = "bot.handlers"
+MODULE = "bot.handlers.helpers"
 
 
 def _patch_deps(services=None):
