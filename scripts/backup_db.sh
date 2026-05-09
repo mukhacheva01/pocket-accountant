@@ -2,8 +2,8 @@
 set -euo pipefail
 
 BACKUP_DIR="/opt/pocket-accountant-bot/backups"
-CONTAINER="deploy-postgres-1"
-DB_NAME="accountant"
+CONTAINER="${POSTGRES_CONTAINER:-pocket-accountant-postgres-1}"
+DB_NAME="${POSTGRES_DB:-pocket_accountant}"
 DB_USER="postgres"
 KEEP_DAYS=7
 
