@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     openrouter_app_name: str = Field(default="", alias="OPENROUTER_APP_NAME")
     ai_enabled: bool = Field(default=False, alias="AI_ENABLED")
     ai_max_requests_per_minute: int = Field(default=30, alias="AI_MAX_REQUESTS_PER_MINUTE")
+    llm_timeout_seconds: float = Field(default=60.0, alias="LLM_TIMEOUT_SECONDS")
 
     # Subscription / monetization
     free_ai_requests_per_day: int = Field(default=3, alias="FREE_AI_REQUESTS_PER_DAY")

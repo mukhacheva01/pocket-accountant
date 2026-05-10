@@ -147,6 +147,11 @@ class BackendClient:
     async def get_referral(self, telegram_id: int) -> dict:
         return await self._request("GET", f"/bot/users/{telegram_id}/referral")
 
+    async def save_referral(self, telegram_id: int, referrer_telegram_id: str) -> dict:
+        return await self._request("POST", f"/bot/users/{telegram_id}/referral", json={
+            "referrer_telegram_id": referrer_telegram_id,
+        })
+
     # ── Onboarding ──
 
     async def onboarding_with_sync(
