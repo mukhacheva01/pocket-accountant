@@ -53,7 +53,8 @@ def register_regime_handlers(router: Router) -> None:
 
     @router.message(RegimeSelectionStates.monthly_income)
     async def regime_income_handler(message: Message, state: FSMContext) -> None:
-        amount = _h.TaxQueryParser.parse_amount(message.text or "")
+        raw = (message.text or "").strip().lower().replace(" ", "")
+        amount = _parse_amount(raw)
         if amount is None:
             await message.answer("Напиши сумму числом. Например: 300000")
             return
@@ -82,46 +83,51 @@ def register_regime_handlers(router: Router) -> None:
     @router.message(RegimeSelectionStates.region)
     async def regime_region_handler(message: Message, state: FSMContext) -> None:
         payload = await state.get_data()
-        try:
-            monthly_income = Decimal(str(payload["monthly_income"]))
-        except (KeyError, InvalidOperation):
-            await state.clear()
-            await message.answer("Не удалось собрать данные. Начни заново: /regime")
-            return
-        async with _h.SessionFactory() as session:
-            services = _h.build_services(session)
-            result = services.tax.compare_regimes(
-                activity=payload["activity"], monthly_income=monthly_income,
-                has_employees=payload["has_employees"], counterparties=payload["counterparties"],
-                region=message.text.strip(),
-            )
+        monthly_income = payload.get("monthly_income", "0")
+        client = _h._get_client()
+        result = await client.compare_regimes(
+            activity=payload.get("activity", "other"),
+            monthly_income=monthly_income,
+            has_employees=payload.get("has_employees", False),
+            counterparties=payload.get("counterparties", "mixed"),
+            region=message.text.strip(),
+        )
         await state.clear()
-        await message.answer(result.render(), reply_markup=main_menu_keyboard())
+        rendered = result.get("rendered", "Ошибка расчёта.")
+        await message.answer(rendered, reply_markup=main_menu_keyboard())
+
+
+def _parse_amount(raw: str) -> Decimal | None:
+    raw = raw.replace(",", ".").replace("₽", "").replace("руб", "").strip()
+    multiplier = 1
+    if raw.endswith("к") or raw.endswith("k"):
+        multiplier = 1000
+        raw = raw[:-1]
+    elif raw.endswith("м") or raw.endswith("m") or raw.endswith("млн"):
+        multiplier = 1_000_000
+        raw = raw.rstrip("млнm")
+    try:
+        return Decimal(raw) * multiplier
+    except (InvalidOperation, ValueError):
+        return None
 
 
 async def handle_tax_calculation(message: Message, raw_query: str, *, force: bool = False) -> bool:
-    if not force and not _h.TaxQueryParser.looks_like_calculation_request(raw_query):
-        return False
-    async with _h.SessionFactory() as session:
-        services = _h.build_services(session)
-        user = await services.onboarding.ensure_user(
-            telegram_id=message.from_user.id, username=message.from_user.username,
-            first_name=message.from_user.first_name, timezone="Europe/Moscow",
-        )
-        profile = await services.onboarding.load_profile(str(user.id))
-        parsed = _h.TaxQueryParser.parse(
-            raw_query,
-            {
-                "entity_type": profile.entity_type.value if profile else None,
-                "tax_regime": profile.tax_regime.value if profile else None,
-                "has_employees": profile.has_employees if profile else False,
-            },
-        )
-        if parsed.question:
-            await message.answer(parsed.question)
-            return True
-        if parsed.request is None:
+    client = _h._get_client()
+    result = await client.parse_and_calculate_tax(message.from_user.id, raw_query)
+
+    if not result.get("ok"):
+        if force:
             return False
-        result = services.tax.calculate(parsed.request)
-        await message.answer(result.render(), reply_markup=main_menu_keyboard())
+        return False
+
+    if result.get("question"):
+        await message.answer(result["question"])
         return True
+
+    rendered = result.get("result")
+    if rendered:
+        await message.answer(rendered, reply_markup=main_menu_keyboard())
+        return True
+
+    return False

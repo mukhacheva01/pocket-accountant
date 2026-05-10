@@ -10,6 +10,8 @@ from bot.handlers.helpers import (  # noqa: F401 — re-exports for tests
     COUNTERPARTIES_MAP,
     ENTITY_TYPE_LABELS,
     ENTITY_TYPE_MAP,
+    EXPENSE_CATEGORY_LABELS,
+    INCOME_CATEGORY_LABELS,
     MAIN_MENU_BUTTONS,
     PLANNED_ENTITY_TEXT,
     REGIME_ACTIVITY_MAP,
@@ -26,29 +28,9 @@ from bot.handlers.helpers import (  # noqa: F401 — re-exports for tests
     load_profile,
     respond,
     show_home,
-    sync_profile_events_and_reminders,
 )
 
-# Re-export dependencies that existing tests patch via "bot.handlers.<name>"
 from shared.config import get_settings as get_settings  # noqa: F401
-from shared.db.enums import (  # noqa: F401
-    EntityType as EntityType,
-    FinanceRecordType as FinanceRecordType,
-    PaymentStatus as PaymentStatus,
-    SubscriptionPlan as SubscriptionPlan,
-    TaxRegime as TaxRegime,
-)
-from shared.db.session import SessionFactory as SessionFactory  # noqa: F401
-from backend.services.container import build_services as build_services  # noqa: F401
-from backend.services.finance_parser import (  # noqa: F401
-    EXPENSE_CATEGORY_LABELS as EXPENSE_CATEGORY_LABELS,
-    INCOME_CATEGORY_LABELS as INCOME_CATEGORY_LABELS,
-)
-from backend.services.onboarding import OnboardingDraft as OnboardingDraft  # noqa: F401
-from backend.services.profile_matching import ProfileContext as ProfileContext  # noqa: F401
-from backend.services.subscription import PLAN_DETAILS as PLAN_DETAILS  # noqa: F401
-from backend.services.tax_engine import TaxQueryParser as TaxQueryParser  # noqa: F401
-from backend.services.rate_limit import allow_ai_request as allow_ai_request  # noqa: F401
 
 from bot.handlers.start import register_start_handlers
 from bot.handlers.onboarding import register_onboarding_handlers
@@ -65,7 +47,6 @@ from bot.handlers.navigation import register_navigation_handlers
 def build_router() -> Router:
     router = Router()
 
-    # Order matters: FSM state handlers must be registered before catch-all.
     register_start_handlers(router)
     register_help_handlers(router)
     register_profile_handlers(router)
@@ -75,7 +56,6 @@ def build_router() -> Router:
     register_finance_handlers(router)
     register_regime_handlers(router)
     register_onboarding_handlers(router)
-    # Navigation callbacks and catch-all MUST be last.
     register_navigation_handlers(router)
 
     return router
