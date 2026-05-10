@@ -186,7 +186,7 @@ class TestPageCallback:
         handler = handlers["page_handler"]
 
         q = make_callback_query()
-        cb_data = PageCallback(page=2)
+        cb_data = PageCallback(screen="events", page=2)
         with bc_patch:
             await handler.callback(q, cb_data)
         q.answer.assert_awaited()
@@ -231,6 +231,7 @@ class TestSubscriptionCallback:
         handler = handlers["subscription_action_handler"]
 
         q = make_callback_query()
+        q.message.answer_invoice = AsyncMock()
         cb_data = SubscriptionCallback(action="buy", plan="basic")
         with bc_patch, patch("shared.config.get_settings", return_value=MagicMock(
             stars_price_basic=150, stars_price_pro=400, stars_price_annual=3500,
