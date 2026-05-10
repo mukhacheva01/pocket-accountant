@@ -8,7 +8,6 @@ from aiogram.types import Message
 import bot.handlers.helpers as _h
 from bot.keyboards import finance_shortcuts_keyboard, main_menu_keyboard
 from bot.states import FinanceInputStates
-from shared.db.enums import FinanceRecordType
 
 
 def register_finance_handlers(router: Router) -> None:
@@ -34,11 +33,11 @@ def register_finance_handlers(router: Router) -> None:
 
     @router.message(Command("income"))
     async def income_list_handler(message: Message) -> None:
-        await _h.show_record_list(message, FinanceRecordType.INCOME)
+        await _h.show_record_list(message, "income")
 
     @router.message(Command("expenses"))
     async def expense_list_handler(message: Message) -> None:
-        await _h.show_record_list(message, FinanceRecordType.EXPENSE)
+        await _h.show_record_list(message, "expense")
 
     @router.message(Command("report"))
     async def report_handler(message: Message) -> None:
@@ -51,18 +50,12 @@ def register_finance_handlers(router: Router) -> None:
         if not payload:
             await prompt_finance_input(message, state, "income")
             return
-        async with _h.SessionFactory() as session:
-            services = _h.build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=message.from_user.id, username=message.from_user.username,
-                first_name=message.from_user.first_name, timezone="Europe/Moscow",
-            )
-            try:
-                await services.finance.add_from_text(str(user.id), _h._normalize_finance_text(payload, "income"))
-            except ValueError:
-                await message.answer("Не понял формат. Пример: _получил 50к от клиента_", parse_mode="Markdown")
-                return
-            await session.commit()
+        client = _h._get_client()
+        source_text = _h._normalize_finance_text(payload, "income")
+        result = await client.add_from_text(message.from_user.id, source_text)
+        if not result.get("ok"):
+            await message.answer("Не понял формат. Пример: _получил 50к от клиента_", parse_mode="Markdown")
+            return
         await state.clear()
         await message.answer("✅ Доход сохранён.", reply_markup=finance_shortcuts_keyboard(), parse_mode="Markdown")
 
@@ -73,18 +66,12 @@ def register_finance_handlers(router: Router) -> None:
         if not payload:
             await prompt_finance_input(message, state, "expense")
             return
-        async with _h.SessionFactory() as session:
-            services = _h.build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=message.from_user.id, username=message.from_user.username,
-                first_name=message.from_user.first_name, timezone="Europe/Moscow",
-            )
-            try:
-                await services.finance.add_from_text(str(user.id), _h._normalize_finance_text(payload, "expense"))
-            except ValueError:
-                await message.answer("Не понял формат. Пример: _заплатил 12к за рекламу_", parse_mode="Markdown")
-                return
-            await session.commit()
+        client = _h._get_client()
+        source_text = _h._normalize_finance_text(payload, "expense")
+        result = await client.add_from_text(message.from_user.id, source_text)
+        if not result.get("ok"):
+            await message.answer("Не понял формат. Пример: _заплатил 12к за рекламу_", parse_mode="Markdown")
+            return
         await state.clear()
         await message.answer("✅ Расход сохранён.", reply_markup=finance_shortcuts_keyboard(), parse_mode="Markdown")
 
@@ -94,18 +81,11 @@ def register_finance_handlers(router: Router) -> None:
         if not source_text:
             await message.answer("Напиши сумму. Пример: _получил 50к от клиента_", parse_mode="Markdown")
             return
-        async with _h.SessionFactory() as session:
-            services = _h.build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=message.from_user.id, username=message.from_user.username,
-                first_name=message.from_user.first_name, timezone="Europe/Moscow",
-            )
-            try:
-                await services.finance.add_from_text(str(user.id), source_text)
-            except ValueError:
-                await message.answer("Не понял сумму. Пример: _получил 50к от клиента_", parse_mode="Markdown")
-                return
-            await session.commit()
+        client = _h._get_client()
+        result = await client.add_from_text(message.from_user.id, source_text)
+        if not result.get("ok"):
+            await message.answer("Не понял сумму. Пример: _получил 50к от клиента_", parse_mode="Markdown")
+            return
         await state.clear()
         await message.answer("✅ Доход сохранён.", reply_markup=finance_shortcuts_keyboard(), parse_mode="Markdown")
 
@@ -115,17 +95,10 @@ def register_finance_handlers(router: Router) -> None:
         if not source_text:
             await message.answer("Напиши сумму. Пример: _заплатил 12к за рекламу_", parse_mode="Markdown")
             return
-        async with _h.SessionFactory() as session:
-            services = _h.build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=message.from_user.id, username=message.from_user.username,
-                first_name=message.from_user.first_name, timezone="Europe/Moscow",
-            )
-            try:
-                await services.finance.add_from_text(str(user.id), source_text)
-            except ValueError:
-                await message.answer("Не понял сумму. Пример: _заплатил 12к за рекламу_", parse_mode="Markdown")
-                return
-            await session.commit()
+        client = _h._get_client()
+        result = await client.add_from_text(message.from_user.id, source_text)
+        if not result.get("ok"):
+            await message.answer("Не понял сумму. Пример: _заплатил 12к за рекламу_", parse_mode="Markdown")
+            return
         await state.clear()
         await message.answer("✅ Расход сохранён.", reply_markup=finance_shortcuts_keyboard(), parse_mode="Markdown")

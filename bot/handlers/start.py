@@ -18,26 +18,13 @@ def register_start_handlers(router: Router) -> None:
         if len(args) > 1 and args[1].startswith("ref_"):
             ref_id = args[1][4:]
 
-        _, profile = await _h.load_profile(message.from_user)
+        data = await _h.load_profile(message.from_user)
 
         if ref_id:
-            async with _h.SessionFactory() as session:
-                services = _h.build_services(session)
-                user = await services.onboarding.ensure_user(
-                    telegram_id=message.from_user.id, username=message.from_user.username,
-                    first_name=message.from_user.first_name, timezone="Europe/Moscow",
-                )
-                if user.referred_by is None and str(message.from_user.id) != ref_id:
-                    user.referred_by = ref_id
-                    from sqlalchemy import select
-                    from shared.db.models import User
-                    result = await session.execute(select(User).where(User.telegram_id == int(ref_id)))
-                    referrer = result.scalar_one_or_none()
-                    if referrer:
-                        referrer.referral_bonus_requests += 3
-                    await session.commit()
+            client = _h._get_client()
+            await client.save_referral(message.from_user.id, ref_id)
 
-        if profile is not None:
+        if data.get("has_profile"):
             await state.clear()
             await _h.show_home(message)
             return
