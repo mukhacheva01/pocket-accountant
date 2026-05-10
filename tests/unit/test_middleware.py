@@ -2,8 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-
 from bot.middleware import ErrorHandlerMiddleware, UserInjectMiddleware
 from tests.unit.bot_helpers import make_mock_backend_client
 

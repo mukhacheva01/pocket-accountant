@@ -3,7 +3,6 @@
 import logging
 from datetime import date
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
