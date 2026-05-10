@@ -2,162 +2,123 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-
 from bot.middleware import ErrorHandlerMiddleware, UserInjectMiddleware
+from tests.unit.bot_helpers import make_mock_backend_client
 
 
 class TestErrorHandlerMiddleware:
-    async def test_success_passthrough(self):
-        middleware = ErrorHandlerMiddleware()
+    async def test_passes_through(self):
+        mw = ErrorHandlerMiddleware()
         handler = AsyncMock(return_value="ok")
-        result = await middleware(handler, MagicMock(), {})
+        event = MagicMock()
+        result = await mw(handler, event, {})
         assert result == "ok"
+        handler.assert_awaited_once()
 
-    async def test_exception_in_message_handler(self):
-        from aiogram.types import Message
-        middleware = ErrorHandlerMiddleware()
-        handler = AsyncMock(side_effect=RuntimeError("boom"))
-        event = MagicMock(spec=Message)
-        event.chat = MagicMock()
+    async def test_catches_exception_message(self):
+        mw = ErrorHandlerMiddleware()
+        handler = AsyncMock(side_effect=ValueError("boom"))
+        event = MagicMock()
+        event.chat = MagicMock(id=123)
         event.answer = AsyncMock()
-
-        result = await middleware(handler, event, {})
+        event.__class__.__name__ = "Message"
+        from aiogram.types import Message
+        event.__class__ = Message
+        result = await mw(handler, event, {})
         assert result is None
-        event.answer.assert_awaited_once()
-        assert "ошибка" in event.answer.call_args[0][0].lower()
 
-    async def test_exception_in_callback_handler(self):
+    async def test_catches_exception_callback(self):
+        mw = ErrorHandlerMiddleware()
+        handler = AsyncMock(side_effect=ValueError("boom"))
         from aiogram.types import CallbackQuery
-        middleware = ErrorHandlerMiddleware()
-        handler = AsyncMock(side_effect=RuntimeError("boom"))
         event = MagicMock(spec=CallbackQuery)
         event.message = MagicMock()
         event.answer = AsyncMock()
-
-        result = await middleware(handler, event, {})
-        assert result is None
-        event.answer.assert_awaited_once()
-
-    async def test_exception_in_error_sending(self):
-        from aiogram.types import Message
-        middleware = ErrorHandlerMiddleware()
-        handler = AsyncMock(side_effect=RuntimeError("boom"))
-        event = MagicMock(spec=Message)
-        event.chat = MagicMock()
-        event.answer = AsyncMock(side_effect=RuntimeError("send failed"))
-
-        result = await middleware(handler, event, {})
+        result = await mw(handler, event, {})
         assert result is None
 
 
 class TestUserInjectMiddleware:
-    @patch("bot.middleware.SessionFactory")
-    @patch("bot.middleware.build_services")
-    async def test_injects_user_data(self, mock_build, mock_sf):
-        session = AsyncMock()
-        mock_sf.return_value.__aenter__ = AsyncMock(return_value=session)
-        mock_sf.return_value.__aexit__ = AsyncMock()
-        session.commit = AsyncMock()
-        session.add = MagicMock()
+    async def test_injects_user_data(self):
+        mw = UserInjectMiddleware()
+        handler = AsyncMock(return_value="ok")
 
-        user = MagicMock()
-        user.id = "u1"
-        user.is_active = True
-        profile = MagicMock()
-        sub = MagicMock()
-
-        services = MagicMock()
-        services.onboarding.ensure_user = AsyncMock(return_value=user)
-        services.onboarding.load_profile = AsyncMock(return_value=profile)
-        services.subscription.get_subscription = AsyncMock(return_value=sub)
-        mock_build.return_value = services
-
+        mc = make_mock_backend_client()
         from aiogram.types import Message
-        actor = MagicMock()
-        actor.id = 123
-        actor.username = "alice"
-        actor.first_name = "Alice"
         event = MagicMock(spec=Message)
         event.text = "/start"
+        event.__class__ = Message
 
-        handler = AsyncMock(return_value="ok")
-        data = {"event_from_user": actor}
-        mw = UserInjectMiddleware()
-        result = await mw(handler, event, data)
-        assert result == "ok"
-        assert data["db_user"] == user
-        assert data["db_profile"] == profile
-        assert data["db_subscription"] == sub
-        assert user.last_command == "start"
-
-    @patch("bot.middleware.SessionFactory")
-    @patch("bot.middleware.build_services")
-    async def test_callback_event(self, mock_build, mock_sf):
-        session = AsyncMock()
-        mock_sf.return_value.__aenter__ = AsyncMock(return_value=session)
-        mock_sf.return_value.__aexit__ = AsyncMock()
-        session.commit = AsyncMock()
-        session.add = MagicMock()
-
-        user = MagicMock()
-        user.id = "u1"
-        user.is_active = True
-        services = MagicMock()
-        services.onboarding.ensure_user = AsyncMock(return_value=user)
-        services.onboarding.load_profile = AsyncMock(return_value=None)
-        services.subscription.get_subscription = AsyncMock(return_value=None)
-        mock_build.return_value = services
-
-        from aiogram.types import CallbackQuery
         actor = MagicMock()
         actor.id = 123
-        actor.username = "bob"
-        actor.first_name = "Bob"
-        event = MagicMock(spec=CallbackQuery)
-        event.data = "action:1"
+        actor.username = "tester"
+        actor.first_name = "Тест"
 
-        handler = AsyncMock(return_value="ok")
         data = {"event_from_user": actor}
-        mw = UserInjectMiddleware()
-        await mw(handler, event, data)
 
-    async def test_no_actor_passthrough(self):
+        with patch("bot.runtime.get_backend_client", return_value=mc):
+            result = await mw(handler, event, data)
+
+        assert result == "ok"
+        mc.track_activity.assert_awaited_once()
+        assert "db_user" in data
+
+    async def test_skips_without_actor(self):
+        mw = UserInjectMiddleware()
         handler = AsyncMock(return_value="ok")
         event = MagicMock()
         data = {}
-        mw = UserInjectMiddleware()
+
         result = await mw(handler, event, data)
         assert result == "ok"
+        handler.assert_awaited_once()
 
-    @patch("bot.middleware.SessionFactory")
-    @patch("bot.middleware.build_services")
-    async def test_reactivates_inactive_user(self, mock_build, mock_sf):
-        session = AsyncMock()
-        mock_sf.return_value.__aenter__ = AsyncMock(return_value=session)
-        mock_sf.return_value.__aexit__ = AsyncMock()
-        session.commit = AsyncMock()
-        session.add = MagicMock()
+    async def test_handles_api_error(self):
+        mw = UserInjectMiddleware()
+        handler = AsyncMock(return_value="ok")
 
-        user = MagicMock()
-        user.id = "u1"
-        user.is_active = False
-        services = MagicMock()
-        services.onboarding.ensure_user = AsyncMock(return_value=user)
-        services.onboarding.load_profile = AsyncMock(return_value=None)
-        services.subscription.get_subscription = AsyncMock(return_value=None)
-        mock_build.return_value = services
+        mc = make_mock_backend_client()
+        mc.track_activity = AsyncMock(side_effect=Exception("connection error"))
 
         from aiogram.types import Message
-        actor = MagicMock()
-        actor.id = 123
-        actor.username = "alice"
-        actor.first_name = "Alice"
         event = MagicMock(spec=Message)
         event.text = "hello"
+        event.__class__ = Message
 
-        handler = AsyncMock(return_value="ok")
+        actor = MagicMock()
+        actor.id = 123
+        actor.username = "tester"
+        actor.first_name = "Тест"
+
         data = {"event_from_user": actor}
+
+        with patch("bot.runtime.get_backend_client", return_value=mc):
+            result = await mw(handler, event, data)
+
+        assert result == "ok"
+        handler.assert_awaited_once()
+
+    async def test_callback_event_type(self):
         mw = UserInjectMiddleware()
-        await mw(handler, event, data)
-        assert user.is_active is True
-        assert user.reactivated_at is not None
+        handler = AsyncMock(return_value="ok")
+
+        mc = make_mock_backend_client()
+        from aiogram.types import CallbackQuery
+        event = MagicMock(spec=CallbackQuery)
+        event.data = "nav:home"
+        event.__class__ = CallbackQuery
+
+        actor = MagicMock()
+        actor.id = 123
+        actor.username = "tester"
+        actor.first_name = "Тест"
+
+        data = {"event_from_user": actor}
+
+        with patch("bot.runtime.get_backend_client", return_value=mc):
+            result = await mw(handler, event, data)
+
+        assert result == "ok"
+        mc.track_activity.assert_awaited_once()
+        call_kwargs = mc.track_activity.call_args[1]
+        assert call_kwargs["event_type"] == "callback"

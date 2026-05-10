@@ -1,7 +1,5 @@
 """Event / calendar handlers — upcoming, overdue, documents, laws, reminders."""
 
-from datetime import timedelta
-
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
@@ -9,7 +7,6 @@ from aiogram.types import CallbackQuery, Message
 import bot.handlers.helpers as _h
 from bot.callbacks import EventActionCallback
 from bot.keyboards import section_shortcuts_keyboard
-from shared.clock import utcnow
 
 
 def register_events_handlers(router: Router) -> None:
@@ -44,13 +41,11 @@ def register_events_handlers(router: Router) -> None:
         if query.message is None:
             await query.answer()
             return
-        async with _h.SessionFactory() as session:
-            services = _h.build_services(session)
-            if callback_data.action == "snooze":
-                await services.calendar.calendar_repo.snooze(callback_data.event_id, utcnow() + timedelta(days=1))
-                await query.message.edit_text("⏰ Отложено на 1 день.", reply_markup=section_shortcuts_keyboard())
-            else:
-                await services.calendar.calendar_repo.mark_completed(callback_data.event_id, utcnow())
-                await query.message.edit_text("✅ Выполнено!", reply_markup=section_shortcuts_keyboard())
-            await session.commit()
+        client = _h._get_client()
+        if callback_data.action == "snooze":
+            await client.event_snooze(callback_data.event_id)
+            await query.message.edit_text("⏰ Отложено на 1 день.", reply_markup=section_shortcuts_keyboard())
+        else:
+            await client.event_complete(callback_data.event_id)
+            await query.message.edit_text("✅ Выполнено!", reply_markup=section_shortcuts_keyboard())
         await query.answer()

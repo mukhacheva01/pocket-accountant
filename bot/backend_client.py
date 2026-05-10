@@ -1,9 +1,12 @@
-"""HTTP client for bot -> backend communication via docker network."""
+"""HTTP client for bot -> backend communication via docker network.
+
+All bot data access goes through this client — the bot never imports
+shared.db or backend.services directly.
+"""
 
 from __future__ import annotations
 
 import logging
-from decimal import Decimal
 
 import httpx
 
@@ -30,84 +33,174 @@ class BackendClient:
         response.raise_for_status()
         return response.json()
 
-    # ── Users ──
+    # ── User activity (middleware) ──
 
-    async def ensure_user(
-        self, telegram_id: int, username: str | None, first_name: str | None, timezone: str = "Europe/Moscow",
+    async def track_activity(
+        self,
+        telegram_id: int,
+        username: str | None = None,
+        first_name: str | None = None,
+        event_type: str = "message",
+        payload: dict | None = None,
+        command: str | None = None,
     ) -> dict:
-        return await self._request("POST", "/users/ensure", json={
+        return await self._request("POST", "/bot/users/track-activity", json={
             "telegram_id": telegram_id,
             "username": username,
             "first_name": first_name,
-            "timezone": timezone,
+            "event_type": event_type,
+            "payload": payload or {},
+            "command": command,
         })
 
-    async def get_profile(self, user_id: str) -> dict:
-        return await self._request("GET", f"/users/{user_id}/profile")
+    # ── Aggregated views ──
 
-    async def complete_onboarding(self, user_id: str, entity_type: str, tax_regime: str, has_employees: bool, region: str) -> dict:
-        return await self._request("POST", f"/users/{user_id}/onboarding", json={
-            "entity_type": entity_type,
-            "tax_regime": tax_regime,
-            "has_employees": has_employees,
-            "region": region,
-        })
+    async def get_home(self, telegram_id: int) -> dict:
+        return await self._request("GET", f"/bot/users/{telegram_id}/home")
+
+    async def get_profile(self, telegram_id: int) -> dict:
+        return await self._request("GET", f"/bot/users/{telegram_id}/profile")
 
     # ── Events ──
 
-    async def upcoming_events(self, user_id: str, days: int = 7) -> dict:
-        return await self._request("GET", f"/events/{user_id}/upcoming", params={"days": days})
+    async def get_events(self, telegram_id: int, days: int = 14) -> dict:
+        return await self._request("GET", f"/bot/events/{telegram_id}/list", params={"days": days})
 
-    async def event_action(self, user_event_id: str, action: str) -> dict:
-        return await self._request("POST", f"/events/{user_event_id}/action", json={"action": action})
+    async def get_calendar(self, telegram_id: int, days: int = 30) -> dict:
+        return await self._request("GET", f"/bot/events/{telegram_id}/calendar", params={"days": days})
+
+    async def get_overdue(self, telegram_id: int) -> dict:
+        return await self._request("GET", f"/bot/events/{telegram_id}/overdue")
+
+    async def event_snooze(self, user_event_id: str) -> dict:
+        return await self._request("POST", f"/bot/events/{user_event_id}/snooze")
+
+    async def event_complete(self, user_event_id: str) -> dict:
+        return await self._request("POST", f"/bot/events/{user_event_id}/complete")
 
     # ── Finance ──
 
-    async def add_finance_record(self, user_id: str, source_text: str, record_type: str) -> dict:
-        return await self._request("POST", f"/finance/{user_id}/record", json={
-            "source_text": source_text,
-            "record_type": record_type,
-        })
+    async def get_finance_report(self, telegram_id: int, days: int = 30) -> dict:
+        return await self._request("GET", f"/bot/finance/{telegram_id}/report", params={"days": days})
 
-    async def get_finance_report(self, user_id: str, days: int = 30) -> dict:
-        return await self._request("GET", f"/finance/{user_id}/report", params={"days": days})
+    async def get_balance(self, telegram_id: int) -> dict:
+        return await self._request("GET", f"/bot/finance/{telegram_id}/balance")
 
-    async def get_finance_records(self, user_id: str, record_type: str = "all", limit: int = 20) -> dict:
-        return await self._request("GET", f"/finance/{user_id}/records", params={
+    async def get_finance_records(self, telegram_id: int, record_type: str = "all", limit: int = 20) -> dict:
+        return await self._request("GET", f"/bot/finance/{telegram_id}/records", params={
             "record_type": record_type,
             "limit": limit,
         })
 
+    async def add_from_text(self, telegram_id: int, source_text: str) -> dict:
+        return await self._request("POST", f"/bot/finance/{telegram_id}/add-from-text", json={
+            "source_text": source_text,
+            "record_kind": "auto",
+        })
+
+    # ── Documents / Laws / Reminders ──
+
+    async def get_documents(self, telegram_id: int) -> dict:
+        return await self._request("GET", f"/bot/users/{telegram_id}/documents")
+
+    async def get_laws(self, telegram_id: int) -> dict:
+        return await self._request("GET", f"/bot/users/{telegram_id}/laws")
+
+    async def get_reminders(self, telegram_id: int) -> dict:
+        return await self._request("GET", f"/bot/users/{telegram_id}/reminders")
+
     # ── AI ──
 
-    async def ask_ai(self, user_id: str, question: str, history: list | None = None) -> dict:
-        return await self._request("POST", f"/ai/{user_id}/question", json={
+    async def ai_full_question(self, telegram_id: int, question: str) -> dict:
+        return await self._request("POST", f"/bot/ai/{telegram_id}/full-question", json={
             "question": question,
-            "history": history or [],
+            "answer": "",
+            "sources": [],
         })
+
+    async def ai_clear_history(self, telegram_id: int) -> dict:
+        return await self._request("DELETE", f"/bot/ai/{telegram_id}/history")
 
     # ── Subscription ──
 
-    async def subscription_status(self, user_id: str) -> dict:
-        return await self._request("GET", f"/subscription/{user_id}/status")
+    async def get_subscription_status(self, telegram_id: int) -> dict:
+        return await self._request("GET", f"/bot/subscription/{telegram_id}/full-status")
 
-    async def activate_subscription(self, user_id: str, plan: str) -> dict:
-        return await self._request("POST", f"/subscription/{user_id}/activate", params={"plan": plan})
+    async def cancel_subscription(self, telegram_id: int) -> dict:
+        return await self._request("POST", f"/bot/subscription/{telegram_id}/cancel")
+
+    async def activate_subscription(self, telegram_id: int, plan: str) -> dict:
+        return await self._request("POST", f"/bot/subscription/{telegram_id}/activate", params={"plan": plan})
+
+    async def record_payment(
+        self, telegram_id: int, plan: str, amount: int, charge_id: str,
+    ) -> dict:
+        return await self._request("POST", f"/bot/subscription/{telegram_id}/record-payment", json={
+            "plan": plan,
+            "amount": amount,
+            "charge_id": charge_id,
+        })
+
+    # ── Referral ──
+
+    async def get_referral(self, telegram_id: int) -> dict:
+        return await self._request("GET", f"/bot/users/{telegram_id}/referral")
+
+    async def save_referral(self, telegram_id: int, referrer_telegram_id: str) -> dict:
+        return await self._request("POST", f"/bot/users/{telegram_id}/referral", json={
+            "referrer_telegram_id": referrer_telegram_id,
+        })
+
+    # ── Onboarding ──
+
+    async def onboarding_with_sync(
+        self,
+        telegram_id: int,
+        entity_type: str,
+        tax_regime: str,
+        has_employees: bool = False,
+        region: str = "Москва",
+        timezone: str = "Europe/Moscow",
+        reminder_settings: dict | None = None,
+        marketplaces_enabled: bool = False,
+        industry: str | None = None,
+    ) -> dict:
+        return await self._request("POST", f"/bot/users/{telegram_id}/onboarding-with-sync", json={
+            "entity_type": entity_type,
+            "tax_regime": tax_regime,
+            "has_employees": has_employees,
+            "region": region,
+            "timezone": timezone,
+            "reminder_settings": reminder_settings or {},
+            "marketplaces_enabled": marketplaces_enabled,
+            "industry": industry,
+        })
 
     # ── Tax ──
 
-    async def calculate_tax(self, regime: str, income: Decimal, expenses: Decimal = Decimal("0"),
-                            entity_type: str | None = None, has_employees: bool = False) -> dict:
-        return await self._request("POST", "/tax/calculate", json={
-            "regime": regime,
-            "income": str(income),
-            "expenses": str(expenses),
-            "entity_type": entity_type,
+    async def compare_regimes(
+        self,
+        activity: str,
+        monthly_income: str,
+        has_employees: bool = False,
+        counterparties: str = "mixed",
+        region: str = "Москва",
+    ) -> dict:
+        return await self._request("POST", "/bot/tax/compare-regimes", json={
+            "activity": activity,
+            "monthly_income": monthly_income,
             "has_employees": has_employees,
+            "counterparties": counterparties,
+            "region": region,
         })
 
-    async def parse_tax_query(self, query: str, profile: dict | None = None) -> dict:
-        return await self._request("POST", "/tax/parse-query", json={
-            "query": query,
-            "profile": profile or {},
-        })
+    async def parse_and_calculate_tax(self, telegram_id: int, query: str) -> dict:
+        return await self._request(
+            "POST", "/bot/tax/parse-and-calculate",
+            params={"telegram_id": telegram_id, "query": query},
+        )
+
+    # ── Templates ──
+
+    async def match_template(self, text: str) -> dict:
+        return await self._request("POST", "/bot/templates/match", json={"text": text})

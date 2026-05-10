@@ -1,6 +1,5 @@
 """Tests for helper functions in bot.handlers.__init__."""
 
-from shared.db.enums import FinanceRecordType
 from bot.handlers import (
     _entity_label,
     _tax_regime_label,
@@ -21,14 +20,14 @@ from bot.handlers import (
 
 class TestMaps:
     def test_entity_type_map(self):
-        assert ENTITY_TYPE_MAP["ИП"].value == "ip"
-        assert ENTITY_TYPE_MAP["ООО"].value == "ooo"
-        assert ENTITY_TYPE_MAP["Самозанятый"].value == "self_employed"
+        assert ENTITY_TYPE_MAP["ИП"] == "ip"
+        assert ENTITY_TYPE_MAP["ООО"] == "ooo"
+        assert ENTITY_TYPE_MAP["Самозанятый"] == "self_employed"
 
     def test_tax_regime_map(self):
-        assert TAX_REGIME_MAP["УСН 6%"].value == "usn_income"
-        assert TAX_REGIME_MAP["ОСНО"].value == "osno"
-        assert TAX_REGIME_MAP["НПД"].value == "npd"
+        assert TAX_REGIME_MAP["УСН 6%"] == "usn_income"
+        assert TAX_REGIME_MAP["ОСНО"] == "osno"
+        assert TAX_REGIME_MAP["НПД"] == "npd"
 
     def test_regime_activity_map(self):
         assert REGIME_ACTIVITY_MAP["Услуги"] == "services"
@@ -70,15 +69,15 @@ class TestTaxRegimeLabel:
 
 class TestCategoryLabel:
     def test_income(self):
-        label = _category_label(FinanceRecordType.INCOME, "services")
-        assert label == "услуги"
+        label = _category_label("income", "services")
+        assert label == "Услуги"
 
     def test_expense(self):
-        label = _category_label(FinanceRecordType.EXPENSE, "marketing")
-        assert label == "реклама"
+        label = _category_label("expense", "marketing")
+        assert label == "Маркетинг"
 
     def test_unknown(self):
-        label = _category_label(FinanceRecordType.INCOME, "unknown_cat")
+        label = _category_label("income", "unknown_cat")
         assert label == "unknown_cat"
 
 
@@ -117,14 +116,10 @@ class TestNormalizeFinanceText:
 
 class TestPlannedEntityLabel:
     def test_planning(self):
-        class P:
-            reminder_settings = {"planning_entity": True}
-        assert _planned_entity_label(P()) == "Пока не открыт"
+        assert _planned_entity_label({"reminder_settings": {"planning_entity": True}}) == "Пока не открыт"
 
     def test_not_planning(self):
-        class P:
-            reminder_settings = {}
-        assert _planned_entity_label(P()) is None
+        assert _planned_entity_label({"reminder_settings": {}}) is None
 
 
 class TestFormatRecords:
@@ -132,27 +127,21 @@ class TestFormatRecords:
         assert _format_records([]) == "Записей пока нет."
 
     def test_with_records(self):
-        from datetime import date
-        from decimal import Decimal
-        from types import SimpleNamespace
-
         records = [
-            SimpleNamespace(
-                record_type=FinanceRecordType.INCOME,
-                amount=Decimal("5000"),
-                category="services",
-                operation_date=date(2026, 1, 15),
-                source_text="получил за услуги",
-            ),
-            SimpleNamespace(
-                record_type=FinanceRecordType.EXPENSE,
-                amount=Decimal("1000"),
-                category="marketing",
-                operation_date=date(2026, 1, 16),
-                source_text="оплатил рекламу",
-            ),
+            {
+                "record_type": "income",
+                "amount": "5000",
+                "category": "services",
+                "operation_date": "2026-01-15",
+            },
+            {
+                "record_type": "expense",
+                "amount": "1000",
+                "category": "marketing",
+                "operation_date": "2026-01-16",
+            },
         ]
         result = _format_records(records)
         assert "+" in result
         assert "-" in result
-        assert "5 000" in result or "5000" in result
+        assert "5000" in result

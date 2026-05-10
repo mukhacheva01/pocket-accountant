@@ -1,7 +1,6 @@
 """Repository for backend-generated events (audit log, sync events, etc.)."""
 
 import logging
-from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 

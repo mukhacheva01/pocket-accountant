@@ -80,7 +80,7 @@ class MatchTemplateRequest(BaseModel):
 
 @router.post("/users/track-activity")
 async def track_activity(req: TrackActivityRequest, services=Depends(get_services_dep)):
-    user = await services.onboarding.ensure_user(
+    await services.onboarding.ensure_user(
         telegram_id=req.telegram_id,
         username=req.username,
         first_name=req.first_name,

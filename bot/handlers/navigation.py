@@ -16,7 +16,6 @@ from bot.keyboards import (
 )
 from bot.messages import paywall_text
 from bot.states import AIConsultStates, OnboardingStates
-from shared.db.enums import FinanceRecordType
 
 
 def register_navigation_handlers(router: Router) -> None:
@@ -45,8 +44,8 @@ def register_navigation_handlers(router: Router) -> None:
             "laws": lambda: _h.show_laws(message, query.from_user, edit=True),
             "finance": lambda: _h.show_finance(message, query.from_user, edit=True),
             "balance": lambda: _h.show_balance(message, query.from_user, edit=True),
-            "income_list": lambda: _h.show_record_list(message, FinanceRecordType.INCOME, query.from_user, edit=True),
-            "expense_list": lambda: _h.show_record_list(message, FinanceRecordType.EXPENSE, query.from_user, edit=True),
+            "income_list": lambda: _h.show_record_list(message, "income", query.from_user, edit=True),
+            "expense_list": lambda: _h.show_record_list(message, "expense", query.from_user, edit=True),
             "settings": lambda: _h.show_settings(message, edit=True),
             "help": lambda: _h.show_help(message, edit=True),
             "subscription": lambda: _h.show_subscription(message, query.from_user, edit=True),
@@ -67,16 +66,8 @@ def register_navigation_handlers(router: Router) -> None:
             return
 
         if target == "ai_clear_history":
-            async with _h.SessionFactory() as session:
-                services = _h.build_services(session)
-                user = await services.onboarding.ensure_user(
-                    telegram_id=query.from_user.id, username=query.from_user.username,
-                    first_name=query.from_user.first_name, timezone="Europe/Moscow",
-                )
-                from sqlalchemy import delete
-                from shared.db.models import AIDialog
-                await session.execute(delete(AIDialog).where(AIDialog.user_id == user.id))
-                await session.commit()
+            client = _h._get_client()
+            await client.ai_clear_history(query.from_user.id)
             await _h.respond(message, "🗑 История очищена!\n\nЗадай новый вопрос 👇", reply_markup=ai_consult_keyboard(), edit=True)
             await query.answer("История очищена")
             return
@@ -94,14 +85,8 @@ def register_navigation_handlers(router: Router) -> None:
             await query.answer()
             return
         if target == "cancel_subscription":
-            async with _h.SessionFactory() as session:
-                services = _h.build_services(session)
-                user = await services.onboarding.ensure_user(
-                    telegram_id=query.from_user.id, username=query.from_user.username,
-                    first_name=query.from_user.first_name, timezone="Europe/Moscow",
-                )
-                await services.subscription.cancel(str(user.id))
-                await session.commit()
+            client = _h._get_client()
+            await client.cancel_subscription(query.from_user.id)
             await _h.respond(
                 message,
                 "🚫 Подписка отменена. Доступ сохранится до конца оплаченного периода.",
@@ -138,95 +123,45 @@ def register_navigation_handlers(router: Router) -> None:
         if not raw_text:
             return
 
-        settings = _h.get_settings()
         normalized = raw_text.lower()
         finance_hints = ("получил", "пришло", "поступление", "заплатил", "оплатил", "потратил", "доход", "расход")
         tax_hints = ("налог", "усн", "нпд", "осно", "патент", "псн", "ндс", "режим", "ставка")
 
         if any(hint in normalized for hint in finance_hints) and not any(hint in normalized for hint in tax_hints):
-            async with _h.SessionFactory() as session:
-                services = _h.build_services(session)
-                user = await services.onboarding.ensure_user(
-                    telegram_id=message.from_user.id, username=message.from_user.username,
-                    first_name=message.from_user.first_name, timezone="Europe/Moscow",
+            client = _h._get_client()
+            result = await client.add_from_text(message.from_user.id, raw_text)
+            if result.get("ok"):
+                record_type = result.get("record_type", "expense")
+                amount = result.get("amount", "0")
+                category = result.get("category", "other")
+                label = _h._category_label(record_type, category)
+                kind = "доход" if record_type == "income" else "расход"
+                await message.answer(
+                    f"✅ Сохранил {kind}: *{amount}* ₽, категория _{label}_",
+                    reply_markup=finance_shortcuts_keyboard(),
+                    parse_mode="Markdown",
                 )
-                try:
-                    record = await services.finance.add_from_text(str(user.id), raw_text)
-                except ValueError:
-                    record = None
-                if record is not None:
-                    await session.commit()
-                    label = _h._category_label(record.record_type, record.category)
-                    kind = "доход" if record.record_type == FinanceRecordType.INCOME else "расход"
-                    await message.answer(
-                        f"✅ Сохранил {kind}: *{record.amount}* ₽, категория _{label}_",
-                        reply_markup=finance_shortcuts_keyboard(),
-                        parse_mode="Markdown",
-                    )
-                    return
-
-        async with _h.SessionFactory() as session:
-            services = _h.build_services(session)
-            template = services.templates.match_template(raw_text)
-            if template is not None:
-                await message.answer(template, reply_markup=main_menu_keyboard())
                 return
+
+        client = _h._get_client()
+        template_result = await client.match_template(raw_text)
+        if template_result.get("matched"):
+            await message.answer(template_result["response"], reply_markup=main_menu_keyboard())
+            return
 
         if await handle_tax_calculation(message, raw_text):
             return
 
-        async with _h.SessionFactory() as session:
-            services = _h.build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=message.from_user.id, username=message.from_user.username,
-                first_name=message.from_user.first_name, timezone="Europe/Moscow",
-            )
-            sub = await services.subscription.get_subscription(str(user.id))
-            can_use, remaining = await services.subscription.can_use_ai(user, sub)
-
-            if not can_use:
-                prices = {
-                    "basic": settings.stars_price_basic,
-                    "pro": settings.stars_price_pro,
-                    "annual": settings.stars_price_annual,
-                }
+        result = await client.ai_full_question(message.from_user.id, raw_text)
+        if not result.get("ok"):
+            error = result.get("error", "")
+            if error == "paywall":
+                sub_data = await client.get_subscription_status(message.from_user.id)
+                prices = sub_data.get("prices", {})
                 await message.answer(paywall_text(0), reply_markup=subscription_keyboard(prices), parse_mode="Markdown")
                 return
-
-            if not await _h.allow_ai_request(settings, str(user.id)):
+            if error == "rate_limit":
                 await message.answer("⚠️ Слишком много запросов. Подожди минуту и повтори.", parse_mode="Markdown")
                 return
 
-            await message.bot.send_chat_action(message.chat.id, "typing")
-
-            profile = await services.onboarding.load_profile(str(user.id))
-
-            from sqlalchemy import select, desc
-            from shared.db.models import AIDialog
-            result = await session.execute(
-                select(AIDialog)
-                .where(AIDialog.user_id == user.id)
-                .order_by(desc(AIDialog.created_at))
-                .limit(5)
-            )
-            dialogs = list(reversed(result.scalars().all()))
-            history = []
-            for d in dialogs:
-                history.append({"role": "user", "content": d.question})
-                history.append({"role": "assistant", "content": d.answer})
-
-            response = await services.ai.answer_tax_question(
-                raw_text,
-                {
-                    "entity_type": profile.entity_type.value if profile else None,
-                    "tax_regime": profile.tax_regime.value if profile else None,
-                    "has_employees": profile.has_employees if profile else None,
-                },
-                history=history,
-            )
-
-            session.add(AIDialog(user_id=user.id, question=raw_text, answer=response.text, sources=response.sources))
-            await services.subscription.increment_ai_usage(user)
-            await session.commit()
-
-        await message.answer(response.text, reply_markup=main_menu_keyboard(), parse_mode="Markdown")
+        await message.answer(result.get("answer", ""), reply_markup=main_menu_keyboard(), parse_mode="Markdown")

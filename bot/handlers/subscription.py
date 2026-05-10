@@ -11,10 +11,15 @@ from aiogram.types import (
 
 import bot.handlers.helpers as _h
 from bot.callbacks import SubscriptionCallback
+from shared.config import get_settings
 from bot.keyboards import main_menu_keyboard
 from bot.messages import payment_success_text
-from shared.db.enums import SubscriptionPlan
-from backend.services.subscription import PLAN_DETAILS
+
+PLAN_DETAILS = {
+    "basic": {"label": "Базовый", "days": 30},
+    "pro": {"label": "Про", "days": 30},
+    "annual": {"label": "Годовой", "days": 365},
+}
 
 
 def register_subscription_handlers(router: Router) -> None:
@@ -29,33 +34,29 @@ def register_subscription_handlers(router: Router) -> None:
 
     @router.callback_query(SubscriptionCallback.filter())
     async def subscription_action_handler(query: CallbackQuery, callback_data: SubscriptionCallback) -> None:
-        settings = _h.get_settings()
+        settings = get_settings()
         if query.message is None:
             await query.answer()
             return
 
         if callback_data.action == "buy":
-            plan_map = {
-                "basic": SubscriptionPlan.BASIC,
-                "pro": SubscriptionPlan.PRO,
-                "annual": SubscriptionPlan.ANNUAL,
-            }
-            plan = plan_map.get(callback_data.plan)
-            if plan is None:
+            plan = callback_data.plan
+            if plan not in PLAN_DETAILS:
                 await query.answer("Неизвестный тариф", show_alert=True)
                 return
 
             details = PLAN_DETAILS[plan]
-            price = settings.stars_price_basic
-            if plan == SubscriptionPlan.PRO:
-                price = settings.stars_price_pro
-            elif plan == SubscriptionPlan.ANNUAL:
-                price = settings.stars_price_annual
+            price_map = {
+                "basic": settings.stars_price_basic,
+                "pro": settings.stars_price_pro,
+                "annual": settings.stars_price_annual,
+            }
+            price = price_map.get(plan, settings.stars_price_basic)
 
             await query.message.answer_invoice(
                 title=f"Подписка «{details['label']}»",
                 description=f"AI без лимитов на {details['days']} дней",
-                payload=f"sub_{callback_data.plan}",
+                payload=f"sub_{plan}",
                 currency="XTR",
                 prices=[LabeledPrice(label=f"Подписка {details['label']}", amount=price)],
             )
@@ -63,7 +64,7 @@ def register_subscription_handlers(router: Router) -> None:
 
     @router.pre_checkout_query()
     async def pre_checkout_handler(pre_checkout: PreCheckoutQuery) -> None:
-        settings = _h.get_settings()
+        settings = get_settings()
         payload = pre_checkout.invoice_payload
         price_map = {
             "sub_basic": settings.stars_price_basic,
@@ -82,35 +83,32 @@ def register_subscription_handlers(router: Router) -> None:
         payload = payment.invoice_payload
 
         plan_map = {
-            "sub_basic": SubscriptionPlan.BASIC,
-            "sub_pro": SubscriptionPlan.PRO,
-            "sub_annual": SubscriptionPlan.ANNUAL,
+            "sub_basic": "basic",
+            "sub_pro": "pro",
+            "sub_annual": "annual",
         }
         plan = plan_map.get(payload)
         if plan is None:
             await message.answer("Оплата получена, но тариф не распознан. Напиши в поддержку.")
             return
 
-        async with _h.SessionFactory() as session:
-            services = _h.build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=message.from_user.id, username=message.from_user.username,
-                first_name=message.from_user.first_name, timezone="Europe/Moscow",
-            )
-            if await services.subscription.payment_exists(payment.telegram_payment_charge_id):
+        client = _h._get_client()
+        result = await client.record_payment(
+            telegram_id=message.from_user.id,
+            plan=plan,
+            amount=payment.total_amount,
+            charge_id=payment.telegram_payment_charge_id,
+        )
+
+        if not result.get("ok"):
+            if result.get("error") == "already_processed":
                 await message.answer("Оплата уже обработана. Если доступ не появился — напиши в поддержку.")
                 return
-            sub = await services.subscription.activate(str(user.id), plan)
-            await services.subscription.record_payment(
-                str(user.id), plan, payment.total_amount,
-                payment.telegram_payment_charge_id,
-            )
-            await session.commit()
 
-        details = PLAN_DETAILS[plan]
-        expires = sub.expires_at.strftime("%d.%m.%Y") if sub.expires_at else "—"
+        details = PLAN_DETAILS.get(plan, {})
+        expires = result.get("expires_at", "—")
         await message.answer(
-            payment_success_text(details["label"], expires),
+            payment_success_text(details.get("label", plan), expires),
             reply_markup=main_menu_keyboard(),
             parse_mode="Markdown",
         )

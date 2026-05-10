@@ -7,16 +7,12 @@ from aiogram.types import Message
 import bot.handlers.helpers as _h
 from bot.keyboards import (
     main_menu_keyboard,
-    onboarding_entity_type_keyboard,
     onboarding_tax_keyboard,
     planned_entity_type_keyboard,
     yes_no_keyboard,
 )
 from bot.messages import onboarding_complete_text
 from bot.states import OnboardingStates
-from shared.db.enums import EntityType, TaxRegime
-from backend.services.onboarding import OnboardingDraft
-from backend.services.profile_matching import ProfileContext
 
 
 def register_onboarding_handlers(router: Router) -> None:
@@ -30,9 +26,9 @@ def register_onboarding_handlers(router: Router) -> None:
             await message.answer("Выбери из кнопок 👇")
             return
         entity_type = _h.ENTITY_TYPE_MAP[message.text]
-        await state.update_data(entity_type=entity_type.value)
-        if entity_type == EntityType.SELF_EMPLOYED:
-            await state.update_data(tax_regime=TaxRegime.NPD.value, has_employees=False)
+        await state.update_data(entity_type=entity_type)
+        if entity_type == "self_employed":
+            await state.update_data(tax_regime="npd", has_employees=False)
             await state.set_state(OnboardingStates.region)
             await message.answer("📍 *Шаг 2/3.* Укажи регион:", parse_mode="Markdown")
             return
@@ -44,7 +40,7 @@ def register_onboarding_handlers(router: Router) -> None:
         if message.text not in _h.TAX_REGIME_MAP:
             await message.answer("Выбери режим из кнопок 👇")
             return
-        await state.update_data(tax_regime=_h.TAX_REGIME_MAP[message.text].value)
+        await state.update_data(tax_regime=_h.TAX_REGIME_MAP[message.text])
         await state.set_state(OnboardingStates.has_employees)
         await message.answer("👥 *Шаг 3/4.* Есть сотрудники?", reply_markup=yes_no_keyboard(), parse_mode="Markdown")
 
@@ -69,47 +65,29 @@ def register_onboarding_handlers(router: Router) -> None:
             return
 
         if not tax_regime_val:
-            tax_regime_val = TaxRegime.NPD.value
+            tax_regime_val = "npd"
 
-        draft = OnboardingDraft(
-            entity_type=EntityType(entity_type_val),
-            tax_regime=TaxRegime(tax_regime_val),
+        reminder_settings = {
+            "notify_taxes": True,
+            "notify_reporting": True,
+            "notify_documents": True,
+            "notify_laws": True,
+            "offset_days": [3, 1],
+            "planning_entity": bool(payload.get("planning_entity")),
+        }
+
+        client = _h._get_client()
+        await client.onboarding_with_sync(
+            telegram_id=message.from_user.id,
+            entity_type=entity_type_val,
+            tax_regime=tax_regime_val,
             has_employees=payload.get("has_employees", False),
-            marketplaces_enabled=False,
-            industry=None,
             region=message.text.strip(),
             timezone="Europe/Moscow",
-            reminder_settings={
-                "notify_taxes": True,
-                "notify_reporting": True,
-                "notify_documents": True,
-                "notify_laws": True,
-                "offset_days": [3, 1],
-                "planning_entity": bool(payload.get("planning_entity")),
-            },
+            reminder_settings=reminder_settings,
         )
 
-        async with _h.SessionFactory() as session:
-            services = _h.build_services(session)
-            user = await services.onboarding.ensure_user(
-                telegram_id=message.from_user.id, username=message.from_user.username,
-                first_name=message.from_user.first_name, timezone=draft.timezone,
-            )
-            await services.onboarding.save_profile(str(user.id), draft)
-            profile_context = ProfileContext(
-                entity_type=draft.entity_type, tax_regime=draft.tax_regime,
-                has_employees=draft.has_employees, marketplaces_enabled=draft.marketplaces_enabled,
-                region=draft.region, industry=draft.industry, reminder_offsets=[3, 1],
-            )
-            await _h.sync_profile_events_and_reminders(
-                session,
-                services,
-                str(user.id),
-                profile_context,
-                draft.reminder_settings,
-                draft.timezone,
-            )
-            await session.commit()
-
         await state.clear()
-        await message.answer(onboarding_complete_text(), reply_markup=main_menu_keyboard(), parse_mode="Markdown")
+        await message.answer(
+            onboarding_complete_text(), reply_markup=main_menu_keyboard(), parse_mode="Markdown",
+        )
