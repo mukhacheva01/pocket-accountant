@@ -1,7 +1,6 @@
 """Shared constants, maps, and helper functions used across handler modules."""
 
 import logging
-from datetime import date, timedelta
 
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import (
@@ -33,7 +32,6 @@ from bot.messages import (
     subscription_status_text,
     welcome_text,
 )
-from shared.config import get_settings
 
 logger = logging.getLogger(__name__)
 

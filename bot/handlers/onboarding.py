@@ -7,7 +7,6 @@ from aiogram.types import Message
 import bot.handlers.helpers as _h
 from bot.keyboards import (
     main_menu_keyboard,
-    onboarding_entity_type_keyboard,
     onboarding_tax_keyboard,
     planned_entity_type_keyboard,
     yes_no_keyboard,

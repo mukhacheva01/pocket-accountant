@@ -7,7 +7,6 @@ shared.db or backend.services directly.
 from __future__ import annotations
 
 import logging
-from decimal import Decimal
 
 import httpx
 

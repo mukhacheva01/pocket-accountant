@@ -123,7 +123,6 @@ def register_navigation_handlers(router: Router) -> None:
         if not raw_text:
             return
 
-        settings = _h.get_settings()
         normalized = raw_text.lower()
         finance_hints = ("получил", "пришло", "поступление", "заплатил", "оплатил", "потратил", "доход", "расход")
         tax_hints = ("налог", "усн", "нпд", "осно", "патент", "псн", "ндс", "режим", "ставка")

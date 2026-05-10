@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 import bot.handlers.helpers as _h
-from bot.keyboards import finance_shortcuts_keyboard, main_menu_keyboard
+from bot.keyboards import finance_shortcuts_keyboard
 from bot.states import FinanceInputStates
 
 

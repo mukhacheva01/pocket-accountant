@@ -11,6 +11,7 @@ from aiogram.types import (
 
 import bot.handlers.helpers as _h
 from bot.callbacks import SubscriptionCallback
+from shared.config import get_settings
 from bot.keyboards import main_menu_keyboard
 from bot.messages import payment_success_text
 
@@ -33,7 +34,7 @@ def register_subscription_handlers(router: Router) -> None:
 
     @router.callback_query(SubscriptionCallback.filter())
     async def subscription_action_handler(query: CallbackQuery, callback_data: SubscriptionCallback) -> None:
-        settings = _h.get_settings()
+        settings = get_settings()
         if query.message is None:
             await query.answer()
             return
@@ -63,7 +64,7 @@ def register_subscription_handlers(router: Router) -> None:
 
     @router.pre_checkout_query()
     async def pre_checkout_handler(pre_checkout: PreCheckoutQuery) -> None:
-        settings = _h.get_settings()
+        settings = get_settings()
         payload = pre_checkout.invoice_payload
         price_map = {
             "sub_basic": settings.stars_price_basic,
