@@ -124,7 +124,7 @@ class TestEventsHandler:
     async def test_with_events(self):
         bc_patch, mc = patch_backend_client()
         mc.get_events = AsyncMock(return_value={"events": [
-            {"title": "Сдача НДС", "due_date": "2026-07-20", "event_id": "e1"},
+            {"title": "Сдача НДС", "due_date": "2026-07-20", "user_event_id": "e1"},
         ]})
         with bc_patch:
             router = build_router()
