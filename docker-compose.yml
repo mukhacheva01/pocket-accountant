@@ -48,6 +48,8 @@ services:
   bot:
     <<: *app-base
     command: ["python", "-m", "bot.entrypoint"]
+    environment:
+      APP_BASE_URL: http://backend:8080
     depends_on:
       backend:
         condition: service_healthy

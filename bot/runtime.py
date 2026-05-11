@@ -13,15 +13,13 @@ def get_backend_client() -> BackendClient:
     if _backend_client is None:
         from shared.config import get_settings
         settings = get_settings()
-        base_url = f"http://{settings.api_host}:{settings.api_port}"
-        _backend_client = BackendClient(base_url=base_url)
+        _backend_client = BackendClient(base_url=settings.app_base_url)
     return _backend_client
 
 
 def build_bot_runtime(settings: Settings) -> tuple[Bot, Dispatcher]:
     global _backend_client
-    base_url = f"http://{settings.api_host}:{settings.api_port}"
-    _backend_client = BackendClient(base_url=base_url)
+    _backend_client = BackendClient(base_url=settings.app_base_url)
 
     bot = Bot(token=settings.telegram_bot_token)
     dispatcher = Dispatcher()

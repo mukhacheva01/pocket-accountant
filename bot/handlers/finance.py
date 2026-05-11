@@ -46,7 +46,8 @@ def register_finance_handlers(router: Router) -> None:
     @router.message(Command("add_income"))
     @router.message(F.text == "💰 Добавить доход")
     async def add_income_handler(message: Message, state: FSMContext) -> None:
-        payload = message.text.partition(" ")[2].strip()
+        text = message.text or ""
+        payload = text.partition(" ")[2].strip() if text.startswith("/") else ""
         if not payload:
             await prompt_finance_input(message, state, "income")
             return
@@ -62,7 +63,8 @@ def register_finance_handlers(router: Router) -> None:
     @router.message(Command("add_expense"))
     @router.message(F.text == "💸 Добавить расход")
     async def add_expense_handler(message: Message, state: FSMContext) -> None:
-        payload = message.text.partition(" ")[2].strip()
+        text = message.text or ""
+        payload = text.partition(" ")[2].strip() if text.startswith("/") else ""
         if not payload:
             await prompt_finance_input(message, state, "expense")
             return
