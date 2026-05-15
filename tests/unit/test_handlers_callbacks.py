@@ -141,11 +141,14 @@ class TestNavigationCallback:
         handler = handlers["navigation_handler"]
 
         q = make_callback_query()
+        q.message.from_user.id = 999999
         cb_data = NavigationCallback(target="ai_topic_calc")
         state = make_state()
         with bc_patch:
             await handler.callback(q, cb_data, state)
         q.answer.assert_awaited()
+        mc.ai_full_question.assert_awaited_once()
+        assert mc.ai_full_question.call_args.args[0] == q.from_user.id
 
     async def test_unknown_target(self):
         bc_patch, mc = patch_backend_client()

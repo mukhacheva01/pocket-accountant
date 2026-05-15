@@ -5,7 +5,7 @@ import logging
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
+from aiogram.types import Message, User as TelegramUser
 
 import bot.handlers.helpers as _h
 from bot.keyboards import (
@@ -45,9 +45,10 @@ async def show_ai_consult(message: Message, state: FSMContext, actor=None, *, ed
         await message.answer("Выбери тему или напиши свой вопрос:", reply_markup=ai_consult_keyboard(), parse_mode="Markdown")
 
 
-async def do_ai_answer(message: Message, question: str) -> None:
+async def do_ai_answer(message: Message, question: str, actor: TelegramUser | None = None) -> None:
+    actor = actor or message.from_user
     client = _h._get_client()
-    data = await client.get_subscription_status(message.from_user.id)
+    data = await client.get_subscription_status(actor.id)
 
     if not data.get("can_ai", True):
         prices = data.get("prices", {})
@@ -56,7 +57,7 @@ async def do_ai_answer(message: Message, question: str) -> None:
 
     await message.bot.send_chat_action(message.chat.id, "typing")
 
-    result = await client.ai_full_question(message.from_user.id, question)
+    result = await client.ai_full_question(actor.id, question)
 
     if not result.get("ok"):
         error = result.get("error", "")

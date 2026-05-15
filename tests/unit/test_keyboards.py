@@ -29,6 +29,17 @@ from bot.keyboards import (
     subscription_manage_keyboard,
     yes_no_keyboard,
 )
+from bot.callbacks import NavigationCallback
+from bot.handlers.navigation import HANDLED_NAVIGATION_TARGETS
+
+
+def _navigation_targets(markup: InlineKeyboardMarkup) -> set[str]:
+    targets = set()
+    for row in markup.inline_keyboard:
+        for button in row:
+            if button.callback_data and button.callback_data.startswith("nav:"):
+                targets.add(NavigationCallback.unpack(button.callback_data).target)
+    return targets
 
 
 class TestReplyKeyboards:
@@ -148,3 +159,22 @@ class TestInlineKeyboards:
     def test_ai_consult_keyboard(self):
         kb = ai_consult_keyboard()
         assert isinstance(kb, InlineKeyboardMarkup)
+
+    def test_all_navigation_buttons_have_handlers(self):
+        markups = [
+            section_shortcuts_keyboard(),
+            finance_shortcuts_keyboard(),
+            documents_shortcuts_keyboard(),
+            profile_shortcuts_keyboard(),
+            laws_shortcuts_keyboard(),
+            reminders_shortcuts_keyboard(),
+            settings_shortcuts_keyboard(),
+            help_shortcuts_keyboard(),
+            event_actions_keyboard("ev123"),
+            subscription_keyboard({"basic": 150, "pro": 400, "annual": 3500}),
+            subscription_manage_keyboard(),
+            retry_keyboard(),
+            ai_consult_keyboard(),
+        ]
+        targets = set().union(*(_navigation_targets(markup) for markup in markups))
+        assert targets <= HANDLED_NAVIGATION_TARGETS

@@ -17,6 +17,46 @@ from bot.keyboards import (
 from bot.messages import paywall_text
 from bot.states import AIConsultStates, OnboardingStates
 
+BASE_NAVIGATION_TARGETS = {
+    "home",
+    "profile",
+    "events",
+    "calendar",
+    "overdue",
+    "documents",
+    "reminders",
+    "laws",
+    "finance",
+    "balance",
+    "income_list",
+    "expense_list",
+    "settings",
+    "help",
+    "subscription",
+    "referral",
+    "ai_consult",
+}
+
+DYNAMIC_NAVIGATION_TARGETS = {
+    "income_prompt",
+    "expense_prompt",
+    "pick_regime",
+}
+
+SPECIAL_NAVIGATION_TARGETS = {
+    "ai_clear_history",
+    "ai_exit",
+    "restart_onboarding",
+    "cancel_subscription",
+}
+
+HANDLED_NAVIGATION_TARGETS = (
+    BASE_NAVIGATION_TARGETS
+    | DYNAMIC_NAVIGATION_TARGETS
+    | SPECIAL_NAVIGATION_TARGETS
+    | set(_h.AI_TOPIC_PROMPTS)
+)
+
 
 def register_navigation_handlers(router: Router) -> None:
     from bot.handlers.ai_consult import do_ai_answer, show_ai_consult as show_ai_consult_fn
@@ -62,7 +102,7 @@ def register_navigation_handlers(router: Router) -> None:
         if target in _h.AI_TOPIC_PROMPTS:
             await state.set_state(AIConsultStates.chatting)
             await query.answer()
-            await do_ai_answer(message, _h.AI_TOPIC_PROMPTS[target])
+            await do_ai_answer(message, _h.AI_TOPIC_PROMPTS[target], query.from_user)
             return
 
         if target == "ai_clear_history":

@@ -36,6 +36,7 @@ class TestErrorHandlerMiddleware:
         event.answer = AsyncMock()
         result = await mw(handler, event, {})
         assert result is None
+        event.answer.assert_awaited_once_with("Не получилось выполнить действие. Попробуй ещё раз.", show_alert=False)
 
 
 class TestUserInjectMiddleware:

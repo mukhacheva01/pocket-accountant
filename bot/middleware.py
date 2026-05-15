@@ -25,7 +25,7 @@ class ErrorHandlerMiddleware(BaseMiddleware):
                         "⚠️ Произошла ошибка. Попробуй ещё раз или напиши /menu"
                     )
                 elif isinstance(event, CallbackQuery) and event.message:
-                    await event.answer("Ошибка, попробуй ещё раз", show_alert=True)
+                    await event.answer("Не получилось выполнить действие. Попробуй ещё раз.", show_alert=False)
             except Exception:
                 logger.exception("error_sending_error_message")
             return None

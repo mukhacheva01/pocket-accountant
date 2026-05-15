@@ -64,7 +64,7 @@ def test_subscription_active():
 def test_subscription_inactive():
     text = subscription_status_text("Бесплатный", "", False)
     assert "Бесплатный" in text
-    assert "3 AI-запроса" in text
+    assert "3 запроса" in text
 
 
 def test_payment_success():
