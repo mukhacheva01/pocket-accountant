@@ -34,7 +34,8 @@ class FinanceService:
             category=payload.category,
             operation_date=payload.operation_date,
             source_text=payload.source_text,
-            parsed_payload=payload.model_dump(),
+            # Persist parser details as JSON-safe primitives for the JSON column.
+            parsed_payload=payload.model_dump(mode="json"),
         )
         return await self.repository.add_record(record)
 

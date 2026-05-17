@@ -1,4 +1,4 @@
-"""AI consultation handlers — FSM chatting, topic shortcuts, clear history."""
+"""AI consultation handlers - FSM chatting, topic shortcuts, clear history."""
 
 import logging
 
@@ -27,9 +27,9 @@ async def show_ai_consult(message: Message, state: FSMContext, actor=None, *, ed
     client = _h._get_client()
     data = await client.get_subscription_status(actor.id)
 
-    is_active = data.get("is_active", False)
     can_use = data.get("can_ai", True)
     remaining = data.get("remaining_ai", 0)
+    is_active = data.get("is_active", False)
 
     if not can_use:
         prices = data.get("prices", {})
@@ -42,7 +42,10 @@ async def show_ai_consult(message: Message, state: FSMContext, actor=None, *, ed
         await _h.respond(message, text, reply_markup=ai_consult_keyboard(), edit=True)
     else:
         await message.answer(text, reply_markup=ai_consult_reply_keyboard(), parse_mode="Markdown")
-        await message.answer("Выбери тему или напиши свой вопрос:", reply_markup=ai_consult_keyboard(), parse_mode="Markdown")
+        await message.answer(
+            "Выбери тему или напиши свой вопрос:",
+            reply_markup=ai_consult_keyboard(),
+        )
 
 
 async def do_ai_answer(message: Message, question: str, actor: TelegramUser | None = None) -> None:
@@ -66,7 +69,7 @@ async def do_ai_answer(message: Message, question: str, actor: TelegramUser | No
             await message.answer(paywall_text(0), reply_markup=subscription_keyboard(prices), parse_mode="Markdown")
             return
         if error == "rate_limit":
-            await message.answer("⚠️ Слишком много запросов. Подожди минуту и повтори.", parse_mode="Markdown")
+            await message.answer("Слишком много запросов. Подожди минуту и повтори.")
             return
 
     answer_text = result.get("answer", "")
@@ -75,9 +78,10 @@ async def do_ai_answer(message: Message, question: str, actor: TelegramUser | No
     if not is_active:
         new_remaining = result.get("remaining_ai", 0)
         if new_remaining <= 2:
-            footer = f"\n\n💬 Осталось запросов: *{new_remaining}*"
+            footer = f"\n\nОсталось запросов: {new_remaining}"
 
-    await message.answer(answer_text + footer, reply_markup=ai_consult_keyboard(), parse_mode="Markdown")
+    # AI answers can include markdown metacharacters, so send plain text.
+    await message.answer(answer_text + footer, reply_markup=ai_consult_keyboard())
 
 
 def register_ai_consult_handlers(router: Router) -> None:
@@ -94,6 +98,9 @@ def register_ai_consult_handlers(router: Router) -> None:
         if message.text == "🗑 Новый диалог":
             client = _h._get_client()
             await client.ai_clear_history(message.from_user.id)
-            await message.answer("🗑 История очищена!\n\nЗадай новый вопрос 👇", reply_markup=ai_consult_reply_keyboard(), parse_mode="Markdown")
+            await message.answer(
+                "🗑 История очищена!\n\nЗадай новый вопрос 👇",
+                reply_markup=ai_consult_reply_keyboard(),
+            )
             return
         await do_ai_answer(message, message.text)

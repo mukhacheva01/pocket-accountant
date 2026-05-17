@@ -204,4 +204,4 @@ def register_navigation_handlers(router: Router) -> None:
                 await message.answer("⚠️ Слишком много запросов. Подожди минуту и повтори.", parse_mode="Markdown")
                 return
 
-        await message.answer(result.get("answer", ""), reply_markup=main_menu_keyboard(), parse_mode="Markdown")
+        await message.answer(result.get("answer", ""), reply_markup=main_menu_keyboard())

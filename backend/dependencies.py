@@ -11,7 +11,12 @@ from backend.services.container import build_services
 
 async def get_services_dep():
     async with SessionFactory() as session:
-        yield build_services(session)
+        try:
+            yield build_services(session)
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
 
 
 def get_settings_dep() -> Settings:
